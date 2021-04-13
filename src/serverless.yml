@@ -1,0 +1,252 @@
+service: eventbridge-poc
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  eventBridge:
+    useCloudFormation: true
+  environment:
+    SUBMISSIONS_BUCKET: ${self:custom.config.SUBMISSIONS_BUCKET}
+    SUBMISSIONS_DMZ_BUCKET: ${self:custom.config.SUBMISSIONS_DMZ_BUCKET}
+    SUBMISSIONS_QUARANTINE_BUCKET: ${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}
+    CLOUDTRAIL_LOGS_BUCKET: ${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}
+    CHALLENGES_TABLE: ${self:custom.config.CHALLENGES_TABLE}
+    SUBMISSIONS_TABLE: ${self:custom.config.SUBMISSIONS_TABLE}
+
+package:
+  individually: true
+
+plugins:
+  - serverless-iam-roles-per-function
+  - serverless-dynamodb-to-eventbridge-plugin
+  - serverless-bundle
+
+custom:
+  config: ${file(./config.yml)}
+
+resources:
+  Resources:
+    # S3 buckets
+    SubmissionsDmzBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.config.SUBMISSIONS_DMZ_BUCKET}
+    SubmissionsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.config.SUBMISSIONS_BUCKET}
+    SubmissionsQuarantineBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}
+
+    # DynamoDB tables
+    ChallengesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.config.CHALLENGES_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    SubmissionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.config.SUBMISSIONS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: filename
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: FilenameIndex
+            KeySchema:
+              - AttributeName: filename
+                KeyType: HASH
+            Projection:
+              NonKeyAttributes:
+                - id
+              ProjectionType: INCLUDE
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    # CloudTrail resources
+    CloudTrailBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}
+    CloudTrailBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: CloudTrailBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: "AWSCloudTrailAclCheck"
+              Effect: "Allow"
+              Principal:
+                Service: "cloudtrail.amazonaws.com"
+              Action: "s3:GetBucketAcl"
+              Resource: arn:aws:s3:::${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}
+            - Sid: "AWSCloudTrailWrite"
+              Effect: "Allow"
+              Principal:
+                Service: "cloudtrail.amazonaws.com"
+              Action: "s3:PutObject"
+              Resource: arn:aws:s3:::${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}/*
+              Condition:
+                StringEquals:
+                  s3:x-amz-acl: "bucket-owner-full-control"
+    EventsTrail:
+      Type: AWS::CloudTrail::Trail
+      DependsOn:
+        - CloudTrailBucketPolicy
+      Properties:
+        TrailName: "EventsTrail"
+        S3BucketName:
+          Ref: CloudTrailBucket
+        IsLogging: true
+        IsMultiRegionTrail: false
+        EventSelectors:
+          - IncludeManagementEvents: false
+            DataResources:
+              - Type: AWS::S3::Object
+                Values:
+                  - arn:aws:s3:::${self:custom.config.SUBMISSIONS_DMZ_BUCKET}/
+                  - arn:aws:s3:::${self:custom.config.SUBMISSIONS_BUCKET}/
+                  - arn:aws:s3:::${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}/
+            ReadWriteType: WriteOnly
+        IncludeGlobalServiceEvents: false
+
+functions:
+  # API Gateway handler functions
+  createChallenge:
+    handler: handlers/api/create-challenge.handler
+    events:
+      - http:
+          path: /eventbridge-poc-challenges
+          method: post
+          request:
+            schemas:
+              application/json: ${file(./schema/create-challenge.json)}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: !GetAtt ChallengesTable.Arn
+
+  # EventBridge handler functions
+  processSubmission:
+    handler: handlers/events/process-submission.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - aws.s3
+            detail-type:
+              - AWS API Call via CloudTrail
+            detail:
+              eventSource:
+                - s3.amazonaws.com
+              eventName:
+                - PutObject
+              requestParameters:
+                bucketName:
+                  - ${self:custom.config.SUBMISSIONS_DMZ_BUCKET}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: !GetAtt SubmissionsTable.Arn
+
+  avScan:
+    handler: handlers/events/av-scan.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.submissions
+            detail-type:
+              - INSERT
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:DeleteObject
+          - s3:ListBucket
+        Resource: arn:aws:s3:::${self:custom.config.SUBMISSIONS_DMZ_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:ListBucket
+        Resource: arn:aws:s3:::${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:ListBucket
+        Resource: arn:aws:s3:::${self:custom.config.SUBMISSIONS_BUCKET}/*
+
+  updateScanResult:
+    handler: handlers/events/update-scan-result.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - aws.s3
+            detail-type:
+              - AWS API Call via CloudTrail
+            detail:
+              eventSource:
+                - s3.amazonaws.com
+              eventName:
+                - CopyObject
+              requestParameters:
+                bucketName:
+                  - ${self:custom.config.SUBMISSIONS_BUCKET}
+                  - ${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: !GetAtt SubmissionsTable.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: !Sub ${SubmissionsTable.Arn}/index/FilenameIndex
+
+  incrementSubmissionsCount:
+    handler: handlers/events/increment-submissions-count.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.submissions
+            detail-type:
+              - MODIFY
+            detail:
+              oldImage:
+                avScanPass:
+                  - null
+              newImage:
+                avScanPass:
+                  - true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: !GetAtt ChallengesTable.Arn
