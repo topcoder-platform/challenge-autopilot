@@ -8,12 +8,12 @@ provider:
   eventBridge:
     useCloudFormation: true
   environment:
-    SUBMISSIONS_BUCKET: ${self:custom.config.SUBMISSIONS_BUCKET}
-    SUBMISSIONS_DMZ_BUCKET: ${self:custom.config.SUBMISSIONS_DMZ_BUCKET}
-    SUBMISSIONS_QUARANTINE_BUCKET: ${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}
-    CLOUDTRAIL_LOGS_BUCKET: ${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}
-    CHALLENGES_TABLE: ${self:custom.config.CHALLENGES_TABLE}
-    SUBMISSIONS_TABLE: ${self:custom.config.SUBMISSIONS_TABLE}
+    SUBMISSIONS_BUCKET: ${env:SUBMISSIONS_BUCKET}
+    SUBMISSIONS_DMZ_BUCKET: ${env:SUBMISSIONS_DMZ_BUCKET}
+    SUBMISSIONS_QUARANTINE_BUCKET: ${env:SUBMISSIONS_QUARANTINE_BUCKET}
+    CLOUDTRAIL_LOGS_BUCKET: ${env:CLOUDTRAIL_LOGS_BUCKET}
+    CHALLENGES_TABLE: ${env:CHALLENGES_TABLE}
+    SUBMISSIONS_TABLE: ${env:SUBMISSIONS_TABLE}
 
 package:
   individually: true
@@ -32,21 +32,21 @@ resources:
     SubmissionsDmzBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.config.SUBMISSIONS_DMZ_BUCKET}
+        BucketName: ${env:SUBMISSIONS_DMZ_BUCKET}
     SubmissionsBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.config.SUBMISSIONS_BUCKET}
+        BucketName: ${env:SUBMISSIONS_BUCKET}
     SubmissionsQuarantineBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}
+        BucketName: ${env:SUBMISSIONS_QUARANTINE_BUCKET}
 
     # DynamoDB tables
     ChallengesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.config.CHALLENGES_TABLE}
+        TableName: ${env:CHALLENGES_TABLE}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -59,7 +59,7 @@ resources:
     SubmissionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.config.SUBMISSIONS_TABLE}
+        TableName: ${env:SUBMISSIONS_TABLE}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -88,7 +88,7 @@ resources:
     CloudTrailBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}
+        BucketName: ${env:CLOUDTRAIL_LOGS_BUCKET}
     CloudTrailBucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
@@ -102,13 +102,13 @@ resources:
               Principal:
                 Service: "cloudtrail.amazonaws.com"
               Action: "s3:GetBucketAcl"
-              Resource: arn:aws:s3:::${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}
+              Resource: arn:aws:s3:::${env:CLOUDTRAIL_LOGS_BUCKET}
             - Sid: "AWSCloudTrailWrite"
               Effect: "Allow"
               Principal:
                 Service: "cloudtrail.amazonaws.com"
               Action: "s3:PutObject"
-              Resource: arn:aws:s3:::${self:custom.config.CLOUDTRAIL_LOGS_BUCKET}/*
+              Resource: arn:aws:s3:::${env:CLOUDTRAIL_LOGS_BUCKET}/*
               Condition:
                 StringEquals:
                   s3:x-amz-acl: "bucket-owner-full-control"
@@ -127,9 +127,9 @@ resources:
             DataResources:
               - Type: AWS::S3::Object
                 Values:
-                  - arn:aws:s3:::${self:custom.config.SUBMISSIONS_DMZ_BUCKET}/
-                  - arn:aws:s3:::${self:custom.config.SUBMISSIONS_BUCKET}/
-                  - arn:aws:s3:::${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}/
+                  - arn:aws:s3:::${env:SUBMISSIONS_DMZ_BUCKET}/
+                  - arn:aws:s3:::${env:SUBMISSIONS_BUCKET}/
+                  - arn:aws:s3:::${env:SUBMISSIONS_QUARANTINE_BUCKET}/
             ReadWriteType: WriteOnly
         IncludeGlobalServiceEvents: false
 
@@ -167,7 +167,7 @@ functions:
                 - PutObject
               requestParameters:
                 bucketName:
-                  - ${self:custom.config.SUBMISSIONS_DMZ_BUCKET}
+                  - ${env:SUBMISSIONS_DMZ_BUCKET}
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -189,17 +189,17 @@ functions:
           - s3:GetObject
           - s3:DeleteObject
           - s3:ListBucket
-        Resource: arn:aws:s3:::${self:custom.config.SUBMISSIONS_DMZ_BUCKET}/*
+        Resource: arn:aws:s3:::${env:SUBMISSIONS_DMZ_BUCKET}/*
       - Effect: Allow
         Action:
           - s3:PutObject
           - s3:ListBucket
-        Resource: arn:aws:s3:::${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}/*
+        Resource: arn:aws:s3:::${env:SUBMISSIONS_QUARANTINE_BUCKET}/*
       - Effect: Allow
         Action:
           - s3:PutObject
           - s3:ListBucket
-        Resource: arn:aws:s3:::${self:custom.config.SUBMISSIONS_BUCKET}/*
+        Resource: arn:aws:s3:::${env:SUBMISSIONS_BUCKET}/*
 
   updateScanResult:
     handler: handlers/events/update-scan-result.handler
@@ -217,8 +217,8 @@ functions:
                 - CopyObject
               requestParameters:
                 bucketName:
-                  - ${self:custom.config.SUBMISSIONS_BUCKET}
-                  - ${self:custom.config.SUBMISSIONS_QUARANTINE_BUCKET}
+                  - ${env:SUBMISSIONS_BUCKET}
+                  - ${env:SUBMISSIONS_QUARANTINE_BUCKET}
     iamRoleStatements:
       - Effect: Allow
         Action:
