@@ -112,26 +112,6 @@ resources:
               Condition:
                 StringEquals:
                   s3:x-amz-acl: "bucket-owner-full-control"
-    EventsTrail:
-      Type: AWS::CloudTrail::Trail
-      DependsOn:
-        - CloudTrailBucketPolicy
-      Properties:
-        TrailName: "EventsTrail"
-        S3BucketName:
-          Ref: CloudTrailBucket
-        IsLogging: true
-        IsMultiRegionTrail: false
-        EventSelectors:
-          - IncludeManagementEvents: false
-            DataResources:
-              - Type: AWS::S3::Object
-                Values:
-                  - arn:aws:s3:::${env:SUBMISSIONS_DMZ_BUCKET}/
-                  - arn:aws:s3:::${env:SUBMISSIONS_BUCKET}/
-                  - arn:aws:s3:::${env:SUBMISSIONS_QUARANTINE_BUCKET}/
-            ReadWriteType: WriteOnly
-        IncludeGlobalServiceEvents: false
 
 functions:
   # API Gateway handler functions
