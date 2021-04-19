@@ -1,9 +1,0 @@
-# S3 bucket names
-SUBMISSIONS_BUCKET: topcoder-eventbridge-poc-submissions
-SUBMISSIONS_DMZ_BUCKET: topcoder-eventbridge-poc-submissions-dmz
-SUBMISSIONS_QUARANTINE_BUCKET: topcoder-eventbridge-poc-submissions-quarantine
-CLOUDTRAIL_LOGS_BUCKET: topcoder-eventbridge-poc-cloudtrail-logfiles
-
-# DynamoDB table names
-CHALLENGES_TABLE: eventbridge-poc-challenges
-SUBMISSIONS_TABLE: eventbridge-poc-submissions
