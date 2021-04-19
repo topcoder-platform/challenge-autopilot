@@ -160,7 +160,7 @@ functions:
       - eventBridge:
           pattern:
             source:
-              - dynamodb.submissions
+              - dynamodb.${env:SUBMISSIONS_TABLE}
             detail-type:
               - INSERT
     iamRoleStatements:
@@ -215,7 +215,7 @@ functions:
       - eventBridge:
           pattern:
             source:
-              - dynamodb.submissions
+              - dynamodb.${env.SUBMISSIONS_TABLE)
             detail-type:
               - MODIFY
             detail:
