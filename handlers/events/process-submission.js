@@ -14,8 +14,8 @@ export const handler = async (event, context) => {
   const submission = {
     id: uuidv4(),
     filename: filename,
-    challengeId: challengeId,
-    avScanPass: null
+    challengeId: challengeId
+    // avScanPass: null
   }
 
   // Insert submission into table
