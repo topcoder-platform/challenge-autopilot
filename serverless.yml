@@ -215,13 +215,14 @@ functions:
       - eventBridge:
           pattern:
             source:
-              - dynamodb.${env.SUBMISSIONS_TABLE}
+              - dynamodb.${env:SUBMISSIONS_TABLE}
             detail-type:
               - MODIFY
             detail:
               oldImage:
                 avScanPass:
                   - null
+                  - "null"
               newImage:
                 avScanPass:
                   - true
