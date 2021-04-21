@@ -11,7 +11,6 @@ provider:
     SUBMISSIONS_BUCKET: ${env:SUBMISSIONS_BUCKET}
     SUBMISSIONS_DMZ_BUCKET: ${env:SUBMISSIONS_DMZ_BUCKET}
     SUBMISSIONS_QUARANTINE_BUCKET: ${env:SUBMISSIONS_QUARANTINE_BUCKET}
-    CLOUDTRAIL_LOGS_BUCKET: ${env:CLOUDTRAIL_LOGS_BUCKET}
     CHALLENGES_TABLE: ${env:CHALLENGES_TABLE}
     SUBMISSIONS_TABLE: ${env:SUBMISSIONS_TABLE}
 
@@ -84,34 +83,6 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
 
-    # CloudTrail resources
-    CloudTrailBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${env:CLOUDTRAIL_LOGS_BUCKET}
-    CloudTrailBucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket:
-          Ref: CloudTrailBucket
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: "AWSCloudTrailAclCheck"
-              Effect: "Allow"
-              Principal:
-                Service: "cloudtrail.amazonaws.com"
-              Action: "s3:GetBucketAcl"
-              Resource: arn:aws:s3:::${env:CLOUDTRAIL_LOGS_BUCKET}
-            - Sid: "AWSCloudTrailWrite"
-              Effect: "Allow"
-              Principal:
-                Service: "cloudtrail.amazonaws.com"
-              Action: "s3:PutObject"
-              Resource: arn:aws:s3:::${env:CLOUDTRAIL_LOGS_BUCKET}/*
-              Condition:
-                StringEquals:
-                  s3:x-amz-acl: "bucket-owner-full-control"
 
 functions:
   # API Gateway handler functions
@@ -209,7 +180,7 @@ functions:
           - dynamodb:Query
         Resource: !Sub ${SubmissionsTable.Arn}/index/FilenameIndex
 
-  incrementSubmissionsCount:
+  incrementSubCount:
     handler: handlers/events/increment-submissions-count.handler
     events:
       - eventBridge:
@@ -219,10 +190,6 @@ functions:
             detail-type:
               - MODIFY
             detail:
-              oldImage:
-                avScanPass:
-                  - null
-                  - "null"
               newImage:
                 avScanPass:
                   - true
