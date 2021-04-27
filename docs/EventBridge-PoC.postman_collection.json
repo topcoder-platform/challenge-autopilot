@@ -1,0 +1,192 @@
+{
+	"info": {
+		"_postman_id": "1760bbf1-e81c-45c3-be5c-5bfb90f7e882",
+		"name": "EventBridge PoC",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Challenges",
+			"item": [
+				{
+					"name": "New Challenge",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Challenge\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{endpoint}}/eventbridge-poc-challenges",
+							"host": [
+								"{{endpoint}}"
+							],
+							"path": [
+								"eventbridge-poc-challenges"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Challenges - All",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{endpoint}}/eventbridge-poc-challenges",
+							"host": [
+								"{{endpoint}}"
+							],
+							"path": [
+								"eventbridge-poc-challenges"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Challenges - Submission",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{endpoint}}/eventbridge-poc-challenges?status=submission",
+							"host": [
+								"{{endpoint}}"
+							],
+							"path": [
+								"eventbridge-poc-challenges"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "submission"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Challenges - Review",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{endpoint}}/eventbridge-poc-challenges?status=review",
+							"host": [
+								"{{endpoint}}"
+							],
+							"path": [
+								"eventbridge-poc-challenges"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "review"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Challenges - Completed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{endpoint}}/eventbridge-poc-challenges?status=completed",
+							"host": [
+								"{{endpoint}}"
+							],
+							"path": [
+								"eventbridge-poc-challenges"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "completed"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Submissions",
+			"item": [
+				{
+					"name": "New Review",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"score\": 85.5,\n    \"reviewerHandle\": \"Reviewer\",\n    \"reviewerId\": \"6b53e767-e480-4c1e-b839-18074fb751fd\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{endpoint}}/eventbridge-poc-submissions/:uuid/reviews",
+							"host": [
+								"{{endpoint}}"
+							],
+							"path": [
+								"eventbridge-poc-submissions",
+								":uuid",
+								"reviews"
+							],
+							"variable": [
+								{
+									"key": "uuid",
+									"value": "",
+									"description": "The UUID of the submission"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "endpoint",
+			"value": "https://REPLACEME.execute-api.us-east-1.amazonaws.com/dev"
+		}
+	]
+}
