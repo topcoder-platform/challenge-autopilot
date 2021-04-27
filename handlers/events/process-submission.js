@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
-import Submission from '../../models/Submission'
+import Submission from '../../models/submission'
 
 /* Responds to PutObject event on DMZ bucket - adds to submissions table */
 export const handler = async (event, context) => {
