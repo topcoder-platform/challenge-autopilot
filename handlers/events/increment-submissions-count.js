@@ -1,20 +1,13 @@
-import { DynamoDB } from 'aws-sdk'
-
-const dynamoDb = new DynamoDB.DocumentClient()
+import Challenge from '../../models/challenge'
 
 /* Responds to submissions table avScanPass update event - increments submissions count */
 export const handler = async (event, context) => {
+  console.info({ event, context })
+
   const { challengeId } = event.detail.newImage
 
-  const values = {
-    TableName: process.env.CHALLENGES_TABLE,
-    Key: {
-      id: challengeId
-    },
-    UpdateExpression: 'set numberOfSubmissions = numberOfSubmissions + :val',
-    ExpressionAttributeValues: {
-      ':val': 1
-    }
-  }
-  await dynamoDb.update(values).promise()
+  await Challenge.update(
+    { id: challengeId },
+    { $ADD: { numberOfSubmissions: 1 } }
+  )
 }

@@ -7,12 +7,24 @@ provider:
   lambdaHashingVersion: 20201221
   eventBridge:
     useCloudFormation: true
+  logs:
+    restApi: true
+  tracing:
+    apiGateway: true
+    lambda: true
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+      Resource: "*"
   environment:
     SUBMISSIONS_BUCKET: ${env:SUBMISSIONS_BUCKET}
     SUBMISSIONS_DMZ_BUCKET: ${env:SUBMISSIONS_DMZ_BUCKET}
     SUBMISSIONS_QUARANTINE_BUCKET: ${env:SUBMISSIONS_QUARANTINE_BUCKET}
     CHALLENGES_TABLE: ${env:CHALLENGES_TABLE}
     SUBMISSIONS_TABLE: ${env:SUBMISSIONS_TABLE}
+    SUBMISSION_REVIEWS_TABLE: ${env:SUBMISSION_REVIEWS_TABLE}
 
 package:
   individually: true
@@ -22,10 +34,13 @@ plugins:
   - serverless-dynamodb-to-eventbridge-plugin
   - serverless-bundle
 
-custom:
-  config: ${file(./config.yml)}
-
 resources:
+  # Only create CloudTrail resources if necessary
+  Conditions:
+    CreateCloudTrail:
+      Fn::Equals:
+        - ${env:CREATE_CLOUDTRAIL, false}
+        - true
   Resources:
     # S3 buckets
     SubmissionsDmzBucket:
@@ -49,12 +64,28 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
+          - AttributeName: status
+            AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: StatusIndex
+            KeySchema:
+              - AttributeName: status
+                KeyType: HASH
+            Projection:
+              NonKeyAttributes:
+                - id
+                - name
+                - numberOfSubmissions
+              ProjectionType: INCLUDE
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
     SubmissionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -63,6 +94,8 @@ resources:
           - AttributeName: id
             AttributeType: S
           - AttributeName: filename
+            AttributeType: S
+          - AttributeName: challengeId
             AttributeType: S
         KeySchema:
           - AttributeName: id
@@ -79,10 +112,47 @@ resources:
             ProvisionedThroughput:
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
+          - IndexName: ChallengeIndex
+            KeySchema:
+              - AttributeName: challengeId
+                KeyType: HASH
+            Projection:
+              NonKeyAttributes:
+                - id
+              ProjectionType: INCLUDE
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-
+    ReviewsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:SUBMISSION_REVIEWS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: submissionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: SubmissionIndex
+            KeySchema:
+              - AttributeName: submissionId
+                KeyType: HASH
+            Projection:
+              NonKeyAttributes:
+                - id
+              ProjectionType: INCLUDE
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 functions:
   # API Gateway handler functions
@@ -95,10 +165,59 @@ functions:
           request:
             schemas:
               application/json: ${file(./schema/create-challenge.json)}
+    iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
+        Resource: !GetAtt ChallengesTable.Arn
+
+  listChallenges:
+    handler: handlers/api/list-challenges.handler
+    events:
+      - http:
+          path: /eventbridge-poc-challenges
+          method: get
+          request:
+            parameters:
+              querystrings:
+                status: false
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: !GetAtt ChallengesTable.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: !Sub ${ChallengesTable.Arn}/index/StatusIndex
+
+  createReview:
+    handler: handlers/api/create-review.handler
+    events:
+      - http:
+          path: /eventbridge-poc-submissions/{submissionId}/reviews
+          method: post
+          request:
+            parameters:
+              paths:
+                submissionId: true
+            schemas:
+              application/json: ${file(./schema/create-review.json)}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: !GetAtt ReviewsTable.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+        Resource: !GetAtt SubmissionsTable.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
         Resource: !GetAtt ChallengesTable.Arn
 
   # EventBridge handler functions
@@ -119,11 +238,16 @@ functions:
               requestParameters:
                 bucketName:
                   - ${env:SUBMISSIONS_DMZ_BUCKET}
+    iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
         Resource: !GetAtt SubmissionsTable.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+        Resource: !GetAtt ChallengesTable.Arn
 
   avScan:
     handler: handlers/events/av-scan.handler
@@ -134,6 +258,7 @@ functions:
               - dynamodb.${env:SUBMISSIONS_TABLE}
             detail-type:
               - INSERT
+    iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -170,6 +295,7 @@ functions:
                 bucketName:
                   - ${env:SUBMISSIONS_BUCKET}
                   - ${env:SUBMISSIONS_QUARANTINE_BUCKET}
+    iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -193,8 +319,33 @@ functions:
               newImage:
                 avScanPass:
                   - true
+    iamRoleStatementsInherit: true
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
         Resource: !GetAtt ChallengesTable.Arn
+
+  updateChallengeStatus:
+    handler: handlers/events/update-challenge-status.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.${env:SUBMISSION_REVIEWS_TABLE}
+            detail-type:
+              - INSERT
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: !GetAtt ChallengesTable.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: !Sub ${SubmissionsTable.Arn}/index/ChallengeIndex
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: !Sub ${ReviewsTable.Arn}/index/SubmissionIndex
