@@ -80,6 +80,7 @@ workflows:
             branches:
               only: 
                 - develop
+                - dev-hotfix-v1
       # production builds are executed on "master" branch only.
       - "build-prod":
           context : org-global
