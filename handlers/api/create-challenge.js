@@ -1,28 +1,26 @@
-import { DynamoDB } from 'aws-sdk'
 import { v4 as uuidv4 } from 'uuid'
 
-const dynamoDb = new DynamoDB.DocumentClient()
+import Challenge, { ChallengeStatus } from '../../models/challenge'
 
 /* POST /challenges = create new challenge */
 export const handler = async (event, context) => {
+  console.info({ event, context })
+
   // Get challenge name from request body
   const body = JSON.parse(event.body)
   const name = body && body.name
 
   // Create challenge object
-  const challenge = {
+  const challenge = new Challenge({
     id: uuidv4(),
     name: name,
-    numberOfSubmissions: 0
-  }
-  const values = {
-    TableName: process.env.CHALLENGES_TABLE,
-    Item: challenge
-  }
+    numberOfSubmissions: 0,
+    status: ChallengeStatus.SUBMISSION
+  })
 
   // Insert challenge into table
   try {
-    await dynamoDb.put(values).promise()
+    await challenge.save()
     return {
       statusCode: 201,
       body: JSON.stringify({
