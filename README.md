@@ -141,3 +141,4 @@ Proof of concept application that processes challenge file submissions using AWS
 - DynamoDB does not support sending events directly to EventBridge.
   - As a solution, the [DynamoDB to EventBridge plugin](https://github.com/theburningmonk/serverless-dynamodb-to-eventbridge-plugin) is used here, which uses [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) to trigger a Lambda that forwards events to EventBridge.
   - An alternative would be to send an [EventBridge custom event](https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutEvents.html) after writing to the database.
+- To remove the serverless.yml lint errors in VS Code, install vscode-cfn-lint extension.
