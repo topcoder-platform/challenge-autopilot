@@ -192,6 +192,26 @@ functions:
         Action:
           - dynamodb:Query
         Resource: !Sub ${ChallengesTable.Arn}/index/StatusIndex
+  listSubmissions:
+    handler: handlers/api/list-submissions.handler
+    events:
+      - http:
+          path: /eventbridge-poc-challenges/{challengeId}/submissions
+          method: get
+          request:
+            parameters:
+              paths:
+                challengeId: true
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: !GetAtt SubmissionsTable.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: !Sub ${SubmissionsTable.Arn}/index/ChallengeIndex
 
   createReview:
     handler: handlers/api/create-review.handler
