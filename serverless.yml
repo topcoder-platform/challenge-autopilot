@@ -193,7 +193,7 @@ functions:
           - dynamodb:Query
         Resource: !Sub ${ChallengesTable.Arn}/index/StatusIndex
   listSubmissions:
-    handler: handlers/api/list-challenges.handler
+    handler: handlers/api/list-submissions.handler
     events:
       - http:
           path: /eventbridge-poc-challenges/{challengeId}/submissions
