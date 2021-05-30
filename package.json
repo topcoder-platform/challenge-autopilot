@@ -19,6 +19,10 @@
   "dependencies": {
     "aws-xray-sdk": "^3.3.1",
     "dynamoose": "^2.7.3",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "axios": "^0.21.1",
+    "config": "^3.3.6",
+    "lodash": "^4.17.21",
+    "tc-core-library-js": "appirio-tech/tc-core-library-js.git#v2.6"
   }
 }
