@@ -369,3 +369,19 @@ functions:
         Action:
           - dynamodb:Query
         Resource: !Sub ${ReviewsTable.Arn}/index/SubmissionIndex
+
+  schedulePhases:
+    handler: handlers/events/schedule-phases.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.${env:CHALLENGES_TABLE}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: !GetAtt ChallengesTable.Arn
