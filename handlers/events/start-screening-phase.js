@@ -10,7 +10,7 @@ export const handler = async (event, context) => {
       let screeningPhase = _.find(challenge.phases, (phase) => phase.name === "Screening");
       if (screeningPhase && !screeningPhase.isOpen) {
         // open the challenge phase
-        await helper.updateChallengePhase(screeningPhase.id, { isOpen: true } )
+        await helper.updateChallengePhase(screeningPhase.phaseId, { isOpen: true } )
       }
     }
   }

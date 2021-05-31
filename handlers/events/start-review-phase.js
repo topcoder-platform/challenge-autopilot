@@ -15,11 +15,11 @@ export const handler = async (event, context) => {
     if (!missingReview) {
       // close the screening phase
       let screeningPhase = _.find(challenge.phases, (phase) => phase.name === "Screening");
-      await helper.updateChallengePhase(screeningPhase.id, { isOpen: false } );
+      await helper.updateChallengePhase(screeningPhase.phaseId, { isOpen: false } );
 
       // open the review phase
       let reviewPhase = _.find(challenge.phases, (phase) => phase.name === "Review");
-      await helper.updateChallengePhase(reviewPhase.id, { isOpen: true } );
+      await helper.updateChallengePhase(reviewPhase.phaseId, { isOpen: true } );
     }
   }
   return;
