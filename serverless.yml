@@ -385,3 +385,40 @@ functions:
           - dynamodb:PutItem
           - dynamodb:UpdateItem
         Resource: !GetAtt ChallengesTable.Arn
+
+  screeningPhase:
+    handler: handlers/events/start-screening-phase.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.${env:CHALLENGES_TABLE}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: !GetAtt ChallengesTable.Arn
+
+  reviewPhases:
+    handler: handlers/events/start-review-phase.handler
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.${env:SUBMISSIONS_TABLE}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: !GetAtt SubmissionsTable.Arn
+
+        
+
+
+        

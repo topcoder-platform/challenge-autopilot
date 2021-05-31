@@ -90,6 +90,72 @@ function getEventsFromPhases (challenge) {
   return events
 }
 
+async function getSubmission(submissionId) {
+  const url = `${config.SUBMISSIONS_API_URL}/${submissionId}`;
+  const token = await getTopcoderM2Mtoken();
+
+  console.info(`request GET ${url}`)
+  try {
+    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
+    console.info(res)
+    return res.data
+  } catch (err) {
+    console.info(err.message)
+    if (err.response) {
+      if (err.response.status === 404) {
+        console.info(`The Submission with the id: ${challengeId} not exist`)
+      }
+    }
+  }
+}
+
+/**
+ * Get all submissions
+ * @param challengeId the challengeId
+ */
+async function getAllSubmissions(challengeId) {
+  const url = `${config.SUBMISSIONS_API_URL}`;
+  const token = await getTopcoderM2Mtoken();
+
+  console.info(`request GET ${url}`)
+  try {
+    const res = await axios.get(url, { params: { challengeId }}, { headers: { Authorization: `Bearer ${token}` } })
+    console.info(res)
+    return res.data
+  } catch (err) {
+    console.info(err.message)
+    if (err.response) {
+      if (err.response.status === 404) {
+        console.info(`The Submissions for challenge with the id: ${challengeId} not exist`)
+      }
+    }
+  }
+}
+
+/**
+ * Update challenge phase
+ * @param challengeId the challengeId
+ * @param body request body
+ */
+ async function updateChallengePhase(challengePhaseId, body) {
+  const url = `${config.CHALLENGE_API_PHASE_URL}/${challengePhaseId}`;
+  const token = await getTopcoderM2Mtoken();
+
+  console.info(`request patch ${url}`)
+  try {
+    const res = await axios.patch(url, body, { headers: { Authorization: `Bearer ${token}` } })
+    console.info(res)
+    return res.data
+  } catch (err) {
+    console.info(err.message)
+    if (err.response) {
+      if (err.response.status === 404) {
+        console.info(`The Challenge phase with the id: ${challengeId} not exist`)
+      }
+    }
+  }
+}
+
 /**
  * Create events in executor app
  * @param events the events array
@@ -164,5 +230,8 @@ module.exports = {
   getEventsFromPhases,
   createEventsInExecutor,
   getEventsFromScheduleApi,
-  deleteEventsInExecutor
+  deleteEventsInExecutor,
+  getAllSubmissions,
+  updateChallengePhase,
+  getSubmission
 }
