@@ -1,21 +1,111 @@
 {
 	"info": {
-		"_postman_id": "1760bbf1-e81c-45c3-be5c-5bfb90f7e882",
+		"_postman_id": "a4df04d8-f634-41b4-92a6-2c60775e64d6",
 		"name": "EventBridge PoC",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Challenges",
+			"name": "prepare",
 			"item": [
 				{
-					"name": "New Challenge",
+					"name": "list challenges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.topcoder-dev.com/v5/challenges?status=Active",
+							"protocol": "https",
+							"host": [
+								"api",
+								"topcoder-dev",
+								"com"
+							],
+							"path": [
+								"v5",
+								"challenges"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "Active"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "dev m2m token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json()",
+									"pm.environment.set(\"M2M_TOKEN\", response.access_token)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Test Challenge\"\n}",
+							"raw": "{\n    \"client_id\":\"jGIf2pd3f44B1jqvOai30BIKTZanYBfU\",\n    \"client_secret\":\"ldzqVaVEbqhwjM5KtZ79sG8djZpAVK8Z7qieVcC3vRjI4NirgcinKSBpPwk6mYYP\",\n    \"audience\":\"https://m2m.topcoder-dev.com/\",\n    \"grant_type\":\"client_credentials\"\n}"
+						},
+						"url": {
+							"raw": "https://topcoder-dev.auth0.com/oauth/token",
+							"protocol": "https",
+							"host": [
+								"topcoder-dev",
+								"auth0",
+								"com"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add phase change to schedule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{M2M_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"url\": \"https://api.topcoder-dev.com/v5/challenges/1305bb63-66bb-418c-b5e0-19cae242c5bf\",\r\n  \"method\": \"patch\",\r\n  \"payload\": \"{ \\\"phases\\\": [{\\n            \\\"phaseId\\\": \\\"a93544bc-c165-4af4-b55e-18f3593b457a\\\",\\n            \\\"isOpen\\\": false\\n          }]\\n        }\",\r\n  \"headers\": {\r\n  \t\"content-type\": \"application/json\"\r\n  },\r\n  \"scheduleTime\": \"2021-06-03T14:01:24Z\",\r\n  \"externalId\":\"1305bb63-66bb-418c-b5e0-19cae242c5bf\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -23,137 +113,60 @@
 							}
 						},
 						"url": {
-							"raw": "{{endpoint}}/eventbridge-poc-challenges",
+							"raw": "https://api.topcoder-dev.com/v5/schedules",
+							"protocol": "https",
 							"host": [
-								"{{endpoint}}"
+								"api",
+								"topcoder-dev",
+								"com"
 							],
 							"path": [
-								"eventbridge-poc-challenges"
+								"v5",
+								"schedules"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "List Challenges - All",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{endpoint}}/eventbridge-poc-challenges",
-							"host": [
-								"{{endpoint}}"
-							],
-							"path": [
-								"eventbridge-poc-challenges"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "List Challenges - Submission",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{endpoint}}/eventbridge-poc-challenges?status=submission",
-							"host": [
-								"{{endpoint}}"
-							],
-							"path": [
-								"eventbridge-poc-challenges"
-							],
-							"query": [
-								{
-									"key": "status",
-									"value": "submission"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "List Challenges - Review",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{endpoint}}/eventbridge-poc-challenges?status=review",
-							"host": [
-								"{{endpoint}}"
-							],
-							"path": [
-								"eventbridge-poc-challenges"
-							],
-							"query": [
-								{
-									"key": "status",
-									"value": "review"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "List Challenges - Completed",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{endpoint}}/eventbridge-poc-challenges?status=completed",
-							"host": [
-								"{{endpoint}}"
-							],
-							"path": [
-								"eventbridge-poc-challenges"
-							],
-							"query": [
-								{
-									"key": "status",
-									"value": "completed"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Submissions",
-			"item": [
-				{
-					"name": "New Review",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"score\": 85.5,\n    \"reviewerHandle\": \"Reviewer\",\n    \"reviewerId\": \"6b53e767-e480-4c1e-b839-18074fb751fd\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
+					"name": "get the schedule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json()",
+									"console.log(JSON.parse(response[0].payload))"
+								],
+								"type": "text/javascript"
 							}
-						},
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{M2M_TOKEN}}",
+								"type": "text"
+							}
+						],
 						"url": {
-							"raw": "{{endpoint}}/eventbridge-poc-submissions/:uuid/reviews",
+							"raw": "https://api.topcoder-dev.com/v5/schedules?externalId=1305bb63-66bb-418c-b5e0-19cae242c5bf",
+							"protocol": "https",
 							"host": [
-								"{{endpoint}}"
+								"api",
+								"topcoder-dev",
+								"com"
 							],
 							"path": [
-								"eventbridge-poc-submissions",
-								":uuid",
-								"reviews"
+								"v5",
+								"schedules"
 							],
-							"variable": [
+							"query": [
 								{
-									"key": "uuid",
-									"value": "",
-									"description": "The UUID of the submission"
+									"key": "externalId",
+									"value": "1305bb63-66bb-418c-b5e0-19cae242c5bf"
 								}
 							]
 						}
