@@ -21,6 +21,7 @@ export const handler = async (event, context) => {
       // create events
       let newEvents = helper.getEventsFromPhases(challenge);
       let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
+
       // use the scheduleTime and phases to check if there is any change
       newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload}))
       oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload)}))
