@@ -12,9 +12,12 @@ Proof of concept application that processes schedule phases updates.
 - AUTH0_CLIENT_ID: AUTH0 client id, used to get M2M token
 - AUTH0_CLIENT_SECRET: AUTH0 client secret, used to get M2M token
 - CHALLENGES_TABLE: the name of the challenges table
+- SUBMISSION_REVIEWS_TABLE: the name of the review table
+- SUBMISSIONS_TABLE: the name of the submission table
 - CREATE_CLOUDTRAIL: should be set to `true` unless CloudTrail is already set up in the account 
 - SCHEDULE_API_URL: the url of the schedule api
 - CHALLENGE_API_URL: the url of the challenge api
+- SUBMISSIONS_API_URL: the url of the submissions api
 *Note, _All these are set via the environment variables.
 
 ## Install and deploy
@@ -30,16 +33,20 @@ Proof of concept application that processes schedule phases updates.
    AUTH0_URL=
    AUTH0_PROXY_SERVER_URL=
    AUTH0_AUDIENCE=
+   TOKEN_CACHE_TIME=
    AUTH0_CLIENT_ID=
    AUTH0_CLIENT_SECRET=
   
    # Depending services
    CHALLENGES_TABLE=
+   SUBMISSION_REVIEWS_TABLE=
+   SUBMISSIONS_TABLE=
    CREATE_CLOUDTRAIL=
 
    # Depending services
    SCHEDULE_API_URL=https://api.topcoder-dev.com/v5/schedules
    CHALLENGE_API_URL=https://api.topcoder-dev.com/v5/challenges
+   SUBMISSIONS_API_URL=https://api.topcoder-dev.com/v5/submissions
    ```
 
   - ⚠️ Never commit this file or its copy to the repository!
