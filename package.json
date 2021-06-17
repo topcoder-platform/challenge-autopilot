@@ -13,7 +13,6 @@
     "eslint-config-standard": "^16.0.2",
     "serverless": "^2.21.1",
     "serverless-bundle": "^4.2.0",
-    "serverless-dynamodb-to-eventbridge-plugin": "^1.1.0",
     "serverless-eslint-plugin": "^0.1.4",
     "serverless-iam-roles-per-function": "^3.1.0",
     "webpack": "^4.43.0"
