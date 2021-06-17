@@ -20,6 +20,8 @@ provider:
       Resource: "*"
   environment:
     CHALLENGES_TABLE: ${env:CHALLENGES_TABLE}
+    SUBMISSION_REVIEWS_TABLE: ${env:SUBMISSION_REVIEWS_TABLE}
+    SUBMISSIONS_TABLE: ${env:SUBMISSIONS_TABLE}
     AUTH0_URL: ${env:AUTH0_URL}
     AUTH0_AUDIENCE: ${env:AUTH0_AUDIENCE}
     TOKEN_CACHE_TIME: ${env:TOKEN_CACHE_TIME}
@@ -27,6 +29,7 @@ provider:
     AUTH0_CLIENT_SECRET: ${env:AUTH0_CLIENT_SECRET}
     SCHEDULE_API_URL: ${env:SCHEDULE_API_URL}
     CHALLENGE_API_URL: ${env:CHALLENGE_API_URL}
+    SUBMISSIONS_API_URL: ${env:SUBMISSIONS_API_URL}
 
 
 package:
@@ -49,6 +52,7 @@ resources:
     # DynamoDB tables
     ChallengesTable:
       Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
       Properties:
         TableName: ${env:CHALLENGES_TABLE}
         AttributeDefinitions:
@@ -76,11 +80,51 @@ resources:
             ProvisionedThroughput:
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
+    ReviewTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${env:SUBMISSION_REVIEWS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: submissionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: submissionIndex
+            KeySchema:
+              - AttributeName: submissionId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    SubmissionTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${env:SUBMISSIONS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 functions:
   # EventBridge handler functions
-  schedulePhases:
-    handler: handlers/events/schedule-phases.handler
+  schedulePhasesByChallenge:
+    handler: handlers/events/schedule-phases.handlerChallenge
     events:
       - eventBridge:
           pattern:
@@ -94,3 +138,33 @@ functions:
           - dynamodb:PutItem
           - dynamodb:UpdateItem
         Resource: !GetAtt ChallengesTable.Arn
+  schedulePhasesByReview:
+    handler: handlers/events/schedule-phases.handlerReview
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.${env:SUBMISSION_REVIEWS_TABLE}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: !GetAtt ReviewTable.Arn
+  schedulePhasesBySubmission:
+    handler: handlers/events/schedule-phases.handlerSubmission
+    events:
+      - eventBridge:
+          pattern:
+            source:
+              - dynamodb.${env:SUBMISSIONS_TABLE}
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: !GetAtt SubmissionTable.Arn
