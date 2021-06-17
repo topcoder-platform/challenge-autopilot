@@ -30,6 +30,9 @@ provider:
     SCHEDULE_API_URL: ${env:SCHEDULE_API_URL}
     CHALLENGE_API_URL: ${env:CHALLENGE_API_URL}
     SUBMISSIONS_API_URL: ${env:SUBMISSIONS_API_URL}
+    CHALLENGE_TABLE_ARN: ${env:CHALLENGE_TABLE_ARN}
+    SUBMISSIONS_TABLE_ARN: ${env:SUBMISSIONS_TABLE_ARN}
+    CHALLENGE_REVIEW_TABLE_ARN: ${env:CHALLENGE_REVIEW_TABLE_ARN}
 
 
 package:
@@ -56,7 +59,7 @@ functions:
           - dynamodb:GetItem
           - dynamodb:PutItem
           - dynamodb:UpdateItem
-        Resource: !GetAtt ChallengesTable.Arn
+        Resource: ${env:CHALLENGE_TABLE_ARN}
   schedulePhasesByReview:
     handler: handlers/events/schedule-phases.handlerReview
     events:
@@ -71,7 +74,7 @@ functions:
           - dynamodb:GetItem
           - dynamodb:PutItem
           - dynamodb:UpdateItem
-        Resource: !GetAtt ReviewTable.Arn
+        Resource: ${env:CHALLENGE_REVIEW_TABLE_ARN}
   schedulePhasesBySubmission:
     handler: handlers/events/schedule-phases.handlerSubmission
     events:
@@ -86,4 +89,4 @@ functions:
           - dynamodb:GetItem
           - dynamodb:PutItem
           - dynamodb:UpdateItem
-        Resource: !GetAtt SubmissionTable.Arn
+        Resource: ${env:SUBMISSIONS_TABLE_ARN}
