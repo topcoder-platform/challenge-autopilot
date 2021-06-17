@@ -41,6 +41,31 @@ plugins:
   - serverless-dynamodb-to-eventbridge-plugin
   - serverless-bundle
 
+resources:
+  # Only create CloudTrail resources if necessary
+  Conditions:
+    CreateCloudTrail:
+      Fn::Equals:
+        - ${env:CREATE_CLOUDTRAIL, false}
+        - true
+  Resources:
+    # DynamoDB tables
+    ChallengesTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${env:CHALLENGES_TABLE}
+    ReviewTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${env:SUBMISSION_REVIEWS_TABLE}
+    SubmissionTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${env:SUBMISSIONS_TABLE}
+
 functions:
   # EventBridge handler functions
   schedulePhasesByChallenge:
