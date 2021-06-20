@@ -15,6 +15,10 @@ provider:
       Action:
         - xray:PutTelemetryRecords
         - xray:PutTraceSegments
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:DescribeStream
+        - dynamodb:ListStreams
       Resource: "*"
   environment:
     CHALLENGES_TABLE: ${env:CHALLENGES_TABLE}
