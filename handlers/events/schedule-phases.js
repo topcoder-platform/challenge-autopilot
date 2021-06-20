@@ -97,9 +97,10 @@ export const handlerReview = async (event, context) => {
   return
 }
 
-export const handlerSubmission = async (event, context) => {
+export const testHandler = async (event, context) => {
   console.log('event:', event)
-  const submissionId = event.detail.newImage.id
-  const challengeId = event.detail.newImage.challengeId
+  console.log('event:', JSON.stringify(event))
+  // const submissionId = event.detail.newImage.id
+  // const challengeId = event.detail.newImage.challengeId
   return
 }
