@@ -47,9 +47,8 @@ functions:
     handler: handlers/events/schedule-phases.testHandler
     events:
       - stream:
-          type: dynamodb
-          arn:
-            Ref: ${env:TEST_TABLE_ARN}
+        type: dynamodb
+        arn: ${env:TEST_TABLE_ARN}
   # # EventBridge handler functions
   # schedulePhasesByChallenge:
   #   handler: handlers/events/schedule-phases.handlerChallenge
