@@ -310,7 +310,7 @@ const helper = {
    * @param {Object} data the event stream object
    * @param {String} key the property key
    */
-  async extractFromDynamoStreamEvent (data, key) {
+  async extractFromDynamoStreamEvent(data, key) {
     const dynamoEvents = _.filter(_.get(data, 'Records', []), r => r.eventSource === AppConstants.EventSources.DynamoDB)
     return _.map(dynamoEvents, record => {
       const obj = _.get(record, `dynamodb.Keys.${key}`)

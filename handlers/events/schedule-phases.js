@@ -6,7 +6,7 @@ import { ChallengeStatuses, EventNames } from '../../app-constants'
 export const handlerChallenge = async (event, context) => {
   // This will only process the first element of the array. If we use batches,
   // we'll have to modify this to loop through records
-  const [challengeDataFromEvent] = helper.extractFromDynamoStreamEvent(event, 'id')
+  const [challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'id')
   const challenge = await helper.getChallenge(challengeDataFromEvent.id)
 
   if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
@@ -19,6 +19,7 @@ export const handlerChallenge = async (event, context) => {
     const events = await helper.getEventsFromPhases(challenge, [])
     // call the executor api
     await helper.createEventsInExecutor(events)
+    console.log('Events to be created:', events)
     console.info(`processing of the record completed, id: ${challenge.id}`)
     return
   }
@@ -35,6 +36,7 @@ export const handlerChallenge = async (event, context) => {
       console.info(`Deleting existing events for challenge ${challenge.id}`)
       await helper.deleteEventsInExecutor(oldEvents)
       console.info(`Creating events for challenge ${challenge.id}`)
+      console.log('Events to be created:', newEvents)
       await helper.createEventsInExecutor(newEvents)
       console.info(`processing of the record completed, id: ${challenge.id}`)
     } else {
