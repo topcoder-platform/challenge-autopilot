@@ -178,7 +178,7 @@ const helper = {
 
     for (const phase of challenge.phases) {
       // if the phase is not the predefined phase, ignore it
-      if (!EventPhaseIDs.includes(phase.phaseId)) {
+      if (!_.keys(EventPhaseIDs).includes(phase.phaseId)) {
         continue
       }
       if (!dateBasedEvents[phase.scheduledStartDate]) {
@@ -187,13 +187,13 @@ const helper = {
       if (!dateBasedEvents[phase.scheduledEndDate]) {
         dateBasedEvents[phase.scheduledEndDate] = []
       }
-      if (new Date(phase.scheduledEndDate).getTime() >= Date.now() && !phase.isOpen) {
+      if (EventPhaseIDs[phase.phaseId].open && new Date(phase.scheduledEndDate).getTime() >= Date.now() && !phase.isOpen) {
         dateBasedEvents[phase.scheduledStartDate].push({
           phaseId: phase.phaseId,
           isOpen: true
         })
       }
-      if (new Date(phase.scheduledStartDate).getTime() <= Date.now() && phase.isOpen) {
+      if (EventPhaseIDs[phase.phaseId].close && new Date(phase.scheduledStartDate).getTime() <= Date.now() && phase.isOpen) {
         dateBasedEvents[phase.scheduledEndDate].push({
           phaseId: phase.phaseId,
           isOpen: false

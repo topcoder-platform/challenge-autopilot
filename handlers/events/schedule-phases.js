@@ -52,7 +52,6 @@ export const handlerChallenge = async (event, context) => {
 
 /* Responds to review table insert/update - schedules phases */
 export const handlerReview = async (event, context) => {
-  console.log('event:', event)
   const reviewTypeId = event.detail.newImage.typeId
   const submissionId = event.detail.newImage.submissionId
   const extrEvents = []

@@ -18,12 +18,26 @@ export const ReviewType = {
   IterativeReview: 'c56a4180-65aa-42ec-a945-5fd21dec0505'
 }
 
-export const EventPhaseIDs = [
-  RegistrationPhase,
-  SubmissionPhase,
-  CheckpointSubmissionPhase,
-  ScreeningPhase
-]
+export const EventPhaseIDs = {
+  [RegistrationPhase]: {
+    open: true,
+    close: true
+  },
+  [SubmissionPhase]: {
+    open: true,
+    close: true
+  },
+  [CheckpointSubmissionPhase]: {
+    open: true,
+    close: true
+  },
+  [CheckpointScreeningPhase]: {
+    open: true
+  },
+  [ScreeningPhase]: {
+    open: true
+  }
+}
 
 export const EventSources = {
   DynamoDB: 'aws:dynamodb'
