@@ -33,9 +33,9 @@ provider:
     CHALLENGE_API_URL: ${env:CHALLENGE_API_URL}
     SUBMISSIONS_API_URL: ${env:SUBMISSIONS_API_URL}
     CHALLENGE_TABLE_ARN: ${env:CHALLENGE_TABLE_ARN}
+    SUBMISSION_REVIEW_TABLE_ARN: ${env:SUBMISSION_REVIEW_TABLE_ARN}
     SUBMISSIONS_TABLE_ARN: ${env:SUBMISSIONS_TABLE_ARN}
-    CHALLENGE_REVIEW_TABLE_ARN: ${env:CHALLENGE_REVIEW_TABLE_ARN}
-    TEST_TABLE_ARN: ${env:TEST_TABLE_ARN}
+    SUBMISSION_REVIEW_SUMMATION_TABLE_ARN: ${env:SUBMISSION_REVIEW_SUMMATION_TABLE_ARN}
 
 
 package:
@@ -47,55 +47,22 @@ plugins:
   - serverless-bundle
 
 functions:
+  # EventBridge handler functions
   schedulePhasesByChallenge:
-    handler: handlers/events/schedule-phases.testHandler
+    handler: handlers/events/schedule-phases.handlerChallenge
     events:
       - stream:
         type: dynamodb
-        arn: ${env:TEST_TABLE_ARN}
-  # # EventBridge handler functions
-  # schedulePhasesByChallenge:
-  #   handler: handlers/events/schedule-phases.handlerChallenge
-  #   events:
-  #     - eventBridge:
-  #         pattern:
-  #           source:
-  #             - dynamodb.${env:CHALLENGES_TABLE}
-  #   iamRoleStatementsInherit: true
-  #   iamRoleStatements:
-  #     - Effect: Allow
-  #       Action:
-  #         - dynamodb:GetItem
-  #         - dynamodb:PutItem
-  #         - dynamodb:UpdateItem
-  #       Resource: ${env:CHALLENGE_TABLE_ARN}
-  # schedulePhasesByReview:
-  #   handler: handlers/events/schedule-phases.handlerReview
-  #   events:
-  #     - eventBridge:
-  #         pattern:
-  #           source:
-  #             - dynamodb.${env:SUBMISSION_REVIEWS_TABLE}
-  #   iamRoleStatementsInherit: true
-  #   iamRoleStatements:
-  #     - Effect: Allow
-  #       Action:
-  #         - dynamodb:GetItem
-  #         - dynamodb:PutItem
-  #         - dynamodb:UpdateItem
-  #       Resource: ${env:CHALLENGE_REVIEW_TABLE_ARN}
-  # schedulePhasesBySubmission:
-  #   handler: handlers/events/schedule-phases.handlerSubmission
-  #   events:
-  #     - eventBridge:
-  #         pattern:
-  #           source:
-  #             - dynamodb.${env:SUBMISSIONS_TABLE}
-  #   iamRoleStatementsInherit: true
-  #   iamRoleStatements:
-  #     - Effect: Allow
-  #       Action:
-  #         - dynamodb:GetItem
-  #         - dynamodb:PutItem
-  #         - dynamodb:UpdateItem
-  #       Resource: ${env:SUBMISSIONS_TABLE_ARN}
+        arn: ${env:CHALLENGE_TABLE_ARN}
+  schedulePhasesByReview:
+    handler: handlers/events/schedule-phases.handlerReview
+    events:
+      - stream:
+        type: dynamodb
+        arn: ${env:SUBMISSION_REVIEW_TABLE_ARN}
+  schedulePhasesBySubmission:
+    handler: handlers/events/schedule-phases.handlerSubmission
+    events:
+      - stream:
+        type: dynamodb
+        arn: ${env:SUBMISSIONS_TABLE_ARN}
