@@ -49,6 +49,7 @@ export const handlerChallenge = async (event, context) => {
       console.log('Events to be created:', JSON.stringify(newEvents))
       await helper.createEventsInExecutor(newEvents)
       console.info(`processing of the record completed, id: ${challenge.id}`)
+      // TODO: This may not be needed as it's supposed to happen instantly
       await handlerReview(null, null, challenge.id)
     } else {
       console.info(`No need to update events for challenge ${challenge.id}`)

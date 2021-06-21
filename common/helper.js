@@ -176,7 +176,7 @@ const helper = {
   async checkIfAllSubmissionsReviewed(submissions, reviewType) {
     for (const oneSubmission of submissions) {
       // TODO: Optimise this to not call the api for all submissions
-      const reviewed = await isSubmissionReviewed(oneSubmission.id, reviewType)
+      const reviewed = await helper.isSubmissionReviewed(oneSubmission.id, reviewType)
       if (!reviewed) {
         return false
       }
