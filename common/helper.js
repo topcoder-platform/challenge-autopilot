@@ -8,14 +8,16 @@ const topcoderM2MConfig = _.pick(process.env, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'T
 const topcoderM2M = m2mAuth({ ...topcoderM2MConfig, AUTH0_AUDIENCE: topcoderM2MConfig.AUTH0_AUDIENCE })
 
 const helper = {
-  async checkExistsSubmissionByChallengeId(challengeId) {
-    // call submission api to check if exists submission
-    return false
-  },
-  async handlePhaseCloseEvent(dateBasedEvents, phase, challengeId) {
+  /**
+   * Check prerequisites to close a phase
+   * @param {Array} dateBasedEvents the events array
+   * @param {Object} phase the phase
+   * @param {String} challengeId the challenge ID
+   */
+  async checkPhasePrerequisites(dateBasedEvents, phase, challengeId) {
     // Checkpoint Submission Phase is closing...
     if (phase.phaseId === AppConstants.CheckpointSubmissionPhase) {
-      const existsSubmission = await helper.checkExistsSubmissionByChallengeId(challengeId)
+      const existsSubmission = await helper.getChallengeSubmissionsByChallengeId(challengeId, AppConstants.SubmissionTypes.CHECKPOINT_SUBMISSION)
       if (existsSubmission) {
         dateBasedEvents[phase.scheduledStartDate].push({
           phaseId: AppConstants.CheckpointScreeningPhase,
@@ -23,10 +25,10 @@ const helper = {
         })
       }
     } else if (phase.phaseId === AppConstants.SubmissionPhase) {
-      const existsSubmission = await helper.checkExistsSubmissionByChallengeId(challengeId)
+      const existsSubmission = await helper.getChallengeSubmissionsByChallengeId(challengeId, AppConstants.SubmissionTypes.CONSTEST_SUBMISSION)
       if (existsSubmission) {
         dateBasedEvents[phase.scheduledStartDate].push({
-          phaseId: AppConstants.ReviewPhase,
+          phaseId: AppConstants.ScreeningPhase,
           isOpen: true
         })
       }
@@ -55,10 +57,8 @@ const helper = {
     const url = `${process.env.CHALLENGE_API_URL}/${challengeId}`
     const token = await helper.getTopcoderM2Mtoken()
 
-    console.info(`request GET ${url}`)
     try {
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
-      console.info(res)
       return res.data
     } catch (err) {
       console.info(err.message)
@@ -82,10 +82,8 @@ const helper = {
     const url = `${process.env.SUBMISSIONS_API_URL}/submissions/${submissionId}`
     const token = await helper.getTopcoderM2Mtoken()
 
-    console.info(`request GET ${url}`)
     try {
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
-      console.info(res)
       return res.data
     } catch (err) {
       console.info(err.message)
@@ -101,16 +99,15 @@ const helper = {
   /**
    * Get submissions by challenge id
    * @param challengeId the challenge id
+   * @param type the submission type
    * @returns {Array} array of challenges
    */
-  async getChallengeSubmissionsByChallengeId(challengeId) {
-    const url = `${process.env.SUBMISSIONS_API_URL}/submissions?challengeId=${challengeId}`
+  async getChallengeSubmissionsByChallengeId(challengeId, type = AppConstants.SubmissionTypes.CONSTEST_SUBMISSION) {
+    const url = `${process.env.SUBMISSIONS_API_URL}/submissions?challengeId=${challengeId}&type=${type}`
     const token = await helper.getTopcoderM2Mtoken()
 
-    console.info(`request GET ${url}`)
     try {
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
-      console.info(res)
       return res.data
     } catch (err) {
       console.info(err.message)
@@ -131,10 +128,9 @@ const helper = {
   async isSubmissionReviewed(submissionId) {
     const url = `${process.env.SUBMISSIONS_API_URL}/reviews?submissionId=${submissionId}`
     const token = await helper.getTopcoderM2Mtoken()
-    console.info(`request GET ${url}`)
     try {
-      const reviews = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
-      console.info(reviews)
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
+      const reviews = res.data
       if (reviews && reviews.length > 0) {
         for (const oneReview of reviews) {
           if (oneReview.status !== 'completed') {
@@ -202,8 +198,9 @@ const helper = {
           phaseId: phase.phaseId,
           isOpen: false
         })
-        await helper.handlePhaseCloseEvent(dateBasedEvents, phase, challenge.id)
+        await helper.checkPhasePrerequisites(dateBasedEvents, phase, challenge.id)
       }
+      // TODO: Optimise this
       // Handle extraEvents
       for (const oneExtraEvent of extraEvents) {
         if (phase.phaseId == oneExtraEvent.phaseId) {
@@ -257,7 +254,6 @@ const helper = {
         }
 
         // call executor api
-        console.debug(`request POST ${url}`)
         await axios.post(`${url}`, executorPayload, { headers: { Authorization: `Bearer ${token}` } })
       } catch (err) {
         console.info(`Failed to create event for external ID ${event.externalId}`)
@@ -274,7 +270,6 @@ const helper = {
   async getEventsFromScheduleApi(challengeId) {
     const url = `${process.env.SCHEDULE_API_URL}?externalId=${challengeId}`
 
-    console.info(`request GET ${url}`)
     try {
       const res = await axios.get(url)
       return res.data || []
@@ -296,7 +291,6 @@ const helper = {
       }
       try {
         // call executor api
-        console.info(`request DELETE ${url}`)
         await axios.delete(`${url}`, { data: executorPayload })
       } catch (err) {
         console.info(`Failed to delete event ${event.id}`)

@@ -22,7 +22,7 @@ export const handlerChallenge = async (event, context) => {
     const events = await helper.getEventsFromPhases(challenge, [])
     // call the executor api
     await helper.createEventsInExecutor(events)
-    console.log('Events to be created:', events)
+    console.log('Events to be created:', JSON.stringify(events))
     console.info(`processing of the record completed, id: ${challenge.id}`)
     return
   }
@@ -39,7 +39,7 @@ export const handlerChallenge = async (event, context) => {
       console.info(`Deleting existing events for challenge ${challenge.id}`)
       await helper.deleteEventsInExecutor(oldEvents)
       console.info(`Creating events for challenge ${challenge.id}`)
-      console.log('Events to be created:', newEvents)
+      console.log('Events to be created:', JSON.stringify(newEvents))
       await helper.createEventsInExecutor(newEvents)
       console.info(`processing of the record completed, id: ${challenge.id}`)
     } else {

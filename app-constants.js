@@ -22,11 +22,7 @@ export const EventPhaseIDs = [
   RegistrationPhase,
   SubmissionPhase,
   CheckpointSubmissionPhase,
-  CheckpointScreeningPhase,
-  CheckpointReviewPhase,  
-  ScreeningPhase,
-  ReviewPhase,
-  FinalFixPhase
+  ScreeningPhase
 ]
 
 export const EventSources = {
@@ -41,4 +37,9 @@ export const EventNames = {
 export const ChallengeStatuses = {
   ACTIVE: 'Active',
   COMPLETED: 'Completed'
+}
+
+export const SubmissionTypes = {
+  CONSTEST_SUBMISSION: 'Contest Submission',
+  CHECKPOINT_SUBMISSION: 'Checkpoint Submission'
 }
