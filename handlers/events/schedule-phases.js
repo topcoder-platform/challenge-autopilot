@@ -66,49 +66,63 @@ export const handlerReview = async (event, context) => {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Screening)
     if (reviewsDone) {
-      apEvents.push({
-        phaseId: CheckpointScreeningPhase,
-        isOpen: false
-      })
-      apEvents.push({
-        phaseId: CheckpointReviewPhase,
-        isOpen: true
-      })
+      if (helper.getPhase(challenge, CheckpointScreeningPhase)) {
+        apEvents.push({
+          phaseId: CheckpointScreeningPhase,
+          isOpen: false
+        })
+      }
+      if (helper.getPhase(challenge, CheckpointReviewPhase)) {
+        apEvents.push({
+          phaseId: CheckpointReviewPhase,
+          isOpen: true
+        })
+      }
     }
   } else if (helper.isPhaseOpen(challenge, CheckpointReviewPhase)) {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.CheckpointReview)
     if (reviewsDone) {
-      apEvents.push({
-        phaseId: CheckpointReviewPhase,
-        isOpen: false
-      })
+      if (helper.getPhase(challenge, CheckpointReviewPhase)) {
+        apEvents.push({
+          phaseId: CheckpointReviewPhase,
+          isOpen: false
+        })
+      }
     }
   } else if (helper.isPhaseOpen(challenge, ScreeningPhase)) {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Screening)
     if (reviewsDone) {
-      apEvents.push({
-        phaseId: ScreeningPhase,
-        isOpen: false
-      })
-      apEvents.push({
-        phaseId: ReviewPhase,
-        isOpen: true
-      })
+      if (helper.getPhase(challenge, ScreeningPhase)) {
+        apEvents.push({
+          phaseId: ScreeningPhase,
+          isOpen: false
+        })
+      }
+      if (helper.getPhase(challenge, ReviewPhase)) {
+        apEvents.push({
+          phaseId: ReviewPhase,
+          isOpen: true
+        })
+      }
     }
   } else if (helper.isPhaseOpen(challenge, ReviewPhase)) {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Review)
     if (reviewsDone) {
-      apEvents.push({
-        phaseId: ReviewPhase,
-        isOpen: false
-      })
-      apEvents.push({
-        phaseId: ApprovalPhase,
-        isOpen: true
-      })
+      if (helper.getPhase(challenge, ReviewPhase)) {
+        apEvents.push({
+          phaseId: ReviewPhase,
+          isOpen: false
+        })
+      }
+      if (helper.getPhase(challenge, ApprovalPhase)) {
+        apEvents.push({
+          phaseId: ApprovalPhase,
+          isOpen: true
+        })
+      }
     }
   }
 

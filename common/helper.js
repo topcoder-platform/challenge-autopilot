@@ -9,6 +9,14 @@ const topcoderM2M = m2mAuth({ ...topcoderM2MConfig, AUTH0_AUDIENCE: topcoderM2MC
 
 const helper = {
   /**
+   * Get a challenge phase
+   * @param {Object} challenge the challenge object
+   * @param {String} phaseId the phase Id
+   */
+  getPhase(challenge, phaseId) {
+    return _.find(_.get(challenge, 'phases', []), p => p.phaseId === phaseId)
+  },
+  /**
    * Check if a phase is open
    * @param {Object} challenge the challenge object
    * @param {String} phaseId the phase ID
