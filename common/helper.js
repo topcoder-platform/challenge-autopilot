@@ -9,6 +9,14 @@ const topcoderM2M = m2mAuth({ ...topcoderM2MConfig, AUTH0_AUDIENCE: topcoderM2MC
 
 const helper = {
   /**
+   * Check if a phase is open
+   * @param {Object} challenge the challenge object
+   * @param {String} phaseId the phase ID
+   */
+  isPhaseOpen(challenge, phaseId) {
+    return _.get(_.find(_.get(challenge, 'phases'), p => p.phaseId === phaseId), 'isOpen', false)
+  },
+  /**
    * Check prerequisites to close a phase
    * @param {Array} dateBasedEvents the events array
    * @param {Object} phase the phase
@@ -17,7 +25,7 @@ const helper = {
   async checkPhasePrerequisites(dateBasedEvents, phase, challengeId) {
     // Checkpoint Submission Phase is closing...
     if (phase.phaseId === AppConstants.CheckpointSubmissionPhase) {
-      const existsSubmission = await helper.getChallengeSubmissionsByChallengeId(challengeId, AppConstants.SubmissionTypes.CHECKPOINT_SUBMISSION)
+      const existsSubmission = await helper.getChallengeSubmissions(challengeId, AppConstants.SubmissionTypes.CHECKPOINT_SUBMISSION)
       if (existsSubmission) {
         dateBasedEvents[phase.scheduledStartDate].push({
           phaseId: AppConstants.CheckpointScreeningPhase,
@@ -25,7 +33,7 @@ const helper = {
         })
       }
     } else if (phase.phaseId === AppConstants.SubmissionPhase) {
-      const existsSubmission = await helper.getChallengeSubmissionsByChallengeId(challengeId, AppConstants.SubmissionTypes.CONSTEST_SUBMISSION)
+      const existsSubmission = await helper.getChallengeSubmissions(challengeId, AppConstants.SubmissionTypes.CONSTEST_SUBMISSION)
       if (existsSubmission) {
         dateBasedEvents[phase.scheduledStartDate].push({
           phaseId: AppConstants.ScreeningPhase,
@@ -102,7 +110,7 @@ const helper = {
    * @param type the submission type
    * @returns {Array} array of challenges
    */
-  async getChallengeSubmissionsByChallengeId(challengeId, type = AppConstants.SubmissionTypes.CONSTEST_SUBMISSION) {
+  async getChallengeSubmissions(challengeId, type = AppConstants.SubmissionTypes.CONSTEST_SUBMISSION) {
     const url = `${process.env.SUBMISSIONS_API_URL}/submissions?challengeId=${challengeId}&type=${type}`
     const token = await helper.getTopcoderM2Mtoken()
 
@@ -123,21 +131,19 @@ const helper = {
   /**
    * Check if a submission get reviewed
    * @param submissionId the submission id
+   * @param typeId the review type id
    * @returns {boolean} true if submission is reviewed
    */
-  async isSubmissionReviewed(submissionId) {
+  async isSubmissionReviewed(submissionId, typeId) {
     const url = `${process.env.SUBMISSIONS_API_URL}/reviews?submissionId=${submissionId}`
     const token = await helper.getTopcoderM2Mtoken()
     try {
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
       const reviews = res.data
       if (reviews && reviews.length > 0) {
-        for (const oneReview of reviews) {
-          if (oneReview.status !== 'completed') {
-            return false
-          }
-        }
-        return true
+        const targetReview = _.find(reviews, r => r.typeId === typeId)
+        if (!targetReview) return false // not yet submitted
+        return targetReview.status === 'completed'
       }
       console.info(`The Submission with the id: ${submissionId} doens't have review records`)
       return false
@@ -156,11 +162,12 @@ const helper = {
   /**
    * Check if all submissions get reviewed
    * @param submissions the submissions
+   * @param reviewType the review type
    * @returns {boolean} if all submissions get reviewed
    */
-  async checkIfAllSubmissionsReviewed(submissions) {
+  async checkIfAllSubmissionsReviewed(submissions, reviewType) {
     for (const oneSubmission of submissions) {
-      const reviewed = await isSubmissionReviewed(oneSubmission.id)
+      const reviewed = await isSubmissionReviewed(oneSubmission.id, reviewType)
       if (!reviewed) {
         return false
       }
@@ -198,7 +205,8 @@ const helper = {
           phaseId: phase.phaseId,
           isOpen: false
         })
-        await helper.checkPhasePrerequisites(dateBasedEvents, phase, challenge.id)
+        // TODO: need to rethink about this one
+        // await helper.checkPhasePrerequisites(dateBasedEvents, phase, challenge.id)
       }
       // TODO: Optimise this
       // Handle extraEvents

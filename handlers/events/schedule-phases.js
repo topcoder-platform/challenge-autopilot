@@ -2,7 +2,14 @@ const _ = require('lodash')
 import helper from '../../common/helper'
 import {
   ChallengeStatuses,
-  EventNames
+  EventNames,
+  CheckpointScreeningPhase,
+  CheckpointReviewPhase,
+  ScreeningPhase,
+  ReviewPhase,
+  ApprovalPhase,
+  SubmissionTypes,
+  ReviewType
 } from '../../app-constants'
 
 /* Responds to challenge table insert/update - schedules phases */
@@ -50,57 +57,70 @@ export const handlerChallenge = async (event, context) => {
   return
 }
 
-/* Responds to review table insert/update - schedules phases */
 export const handlerReview = async (event, context) => {
-  const reviewTypeId = event.detail.newImage.typeId
-  const submissionId = event.detail.newImage.submissionId
-  const extrEvents = []
-  if (reviewTypeId === AppConstants.ReviewType.Screening || reviewTypeId === AppConstants.ReviewType.Review) {
-    const submissionInfo = await helper.getSubmissionById(submissionId)
-    const challengeId = submissionInfo.challengeId
-    const allSubmissions = await helper.getChallengeSubmissionsByChallengeId(challengeId)
-    const areAllSubmissionsReivewed = await helper.checkIfAllSubmissionsReviewed(allSubmissions)
-    if (areAllSubmissionsReivewed) {
-      const challenge = await helper.getChallenge(challengeId)
-      if (eviewTypeId === AppConstants.ReviewType.Screening) {
-        // Close the checkpoint screening for challenge: challengeId
-        extrEvents.push({
-          phaseId: AppConstants.CheckpointScreeningPhase,
-          isOpen: false
-        })
-        // Start the checkpoint review for challenge: challengeId
-        extrEvents.push({
-          phaseId: AppConstants.CheckpointReviewPhase,
-          isOpen: true
-        })
-      } else if (reviewTypeId === AppConstants.ReviewType.Review) {
-        // Close the review phase for challenge: challengeId
-        extrEvents.push({
-          phaseId: AppConstants.ReviewPhase,
-          isOpen: false
-        })
-        // Start the final fix phase for challenge: challengeId
-        extrEvents.push({
-          phaseId: AppConstants.FinalFixPhase,
-          isOpen: true
-        })
-      }
+  const [reviewDataFromDynamo] = await helper.extractFromDynamoStreamEvent(event, 'submissionId')
+  const submission = await helper.getSubmissionById(reviewDataFromDynamo.submissionId)
+  const challenge = await helper.getChallenge(submission.challengeId)
+  const apEvents = []
+  if (helper.isPhaseOpen(challenge, CheckpointScreeningPhase)) {
+    const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
+    const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Screening)
+    if (reviewsDone) {
+      apEvents.push({
+        phaseId: CheckpointScreeningPhase,
+        isOpen: false
+      })
+      apEvents.push({
+        phaseId: CheckpointReviewPhase,
+        isOpen: true
+      })
+    }
+  } else if (helper.isPhaseOpen(challenge, CheckpointReviewPhase)) {
+    const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
+    const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.CheckpointReview)
+    if (reviewsDone) {
+      apEvents.push({
+        phaseId: CheckpointReviewPhase,
+        isOpen: false
+      })
+    }
+  } else if (helper.isPhaseOpen(challenge, ScreeningPhase)) {
+    const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
+    const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Screening)
+    if (reviewsDone) {
+      apEvents.push({
+        phaseId: ScreeningPhase,
+        isOpen: false
+      })
+      apEvents.push({
+        phaseId: ReviewPhase,
+        isOpen: true
+      })
+    }
+  } else if (helper.isPhaseOpen(challenge, ReviewPhase)) {
+    const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
+    const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Review)
+    if (reviewsDone) {
+      apEvents.push({
+        phaseId: ReviewPhase,
+        isOpen: false
+      })
+      apEvents.push({
+        phaseId: ApprovalPhase,
+        isOpen: true
+      })
     }
   }
-  if (extrEvents.length > 0) {
-    let newEvents = await helper.getEventsFromPhases(challenge, extrEvents)
-    let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
-    newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload }))
-    oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) }))
-    if (!_.isEqual(newEvents, oldEvents)) {
-      console.info(`Deleting existing events for challenge ${challenge.id}`)
-      await helper.deleteEventsInExecutor(oldEvents)
-      console.info(`Creating events for challenge ${challenge.id}`)
-      await helper.createEventsInExecutor(newEvents)
-      console.info(`processing of the record completed, id: ${challenge.id}`)
-    } else {
-      console.info(`No need to update events for challenge ${challenge.id}`)
-    }
+
+  if (apEvents.length > 0) {
+    // TODO: handle existing events?
+    await helper.createEventsInExecutor(_.map(apEvents, e => ({
+      externalId: challenge.id,
+      scheduleTime: Date.now(),
+      payload: {
+        phases: e
+      }
+    })))
   }
   return
 }

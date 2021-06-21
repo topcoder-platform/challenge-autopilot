@@ -9,6 +9,7 @@ export const CheckpointReviewPhase= '84b43897-2aab-44d6-a95a-42c433657eed'
 export const ScreeningPhase = '2d7d3d85-0b29-4989-b3b4-be7f2b1d0aa6'
 export const ReviewPhase = 'aa5a3f78-79e0-4bf7-93ff-b11e8f5b398b'
 export const FinalFixPhase = '3e2afca6-9542-4763-a135-96b33f12c082'
+export const ApprovalPhase = 'ad985cff-ad3e-44de-b54e-3992505ba0ae'
 
 export const ReviewType = {
   Screening: 'c56a4180-65aa-42ec-a945-5fd21dec0501',
