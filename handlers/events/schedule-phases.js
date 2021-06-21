@@ -166,13 +166,13 @@ export const handlerReview = async (event, context, challengeId) => {
 
   if (apEvents.length > 0) {
     // TODO: handle existing events?
-    await helper.createEventsInExecutor({
+    await helper.createEventsInExecutor([{
       externalId: challenge.id,
       scheduleTime: Date.now(),
       payload: {
         phases: apEvents
       }
-    })
+    }])
   }
   return
 }
