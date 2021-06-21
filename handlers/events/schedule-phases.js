@@ -1,6 +1,9 @@
 const _ = require('lodash')
 import helper from '../../common/helper'
-import { ChallengeStatuses, EventNames } from '../../app-constants'
+import {
+  ChallengeStatuses,
+  EventNames
+} from '../../app-constants'
 
 /* Responds to challenge table insert/update - schedules phases */
 export const handlerChallenge = async (event, context) => {
@@ -29,8 +32,8 @@ export const handlerChallenge = async (event, context) => {
     let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
 
     // use the scheduleTime and phases to check if there is any change
-    newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload}))
-    oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload)}))
+    newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload }))
+    oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) }))
 
     if (!_.isEqual(newEvents, oldEvents)) {
       console.info(`Deleting existing events for challenge ${challenge.id}`)
@@ -88,8 +91,8 @@ export const handlerReview = async (event, context) => {
   if (extrEvents.length > 0) {
     let newEvents = await helper.getEventsFromPhases(challenge, extrEvents)
     let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
-    newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload}))
-    oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload)}))
+    newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload }))
+    oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) }))
     if (!_.isEqual(newEvents, oldEvents)) {
       console.info(`Deleting existing events for challenge ${challenge.id}`)
       await helper.deleteEventsInExecutor(oldEvents)
