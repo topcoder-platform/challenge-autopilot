@@ -95,7 +95,7 @@ const helper = {
    * @returns {object} submission
    */
   async getSubmissionById(submissionId) {
-    const url = `${process.env.SUBMISSIONS_API_URL}/submissions/${submissionId}`
+    const url = `${process.env.SUBMISSIONS_API_URL}/${submissionId}`
     const token = await helper.getTopcoderM2Mtoken()
 
     try {
@@ -119,7 +119,7 @@ const helper = {
    * @returns {Array} array of challenges
    */
   async getChallengeSubmissions(challengeId, type = AppConstants.SubmissionTypes.CONSTEST_SUBMISSION) {
-    const url = `${process.env.SUBMISSIONS_API_URL}/submissions?challengeId=${challengeId}&type=${type}`
+    const url = `${process.env.SUBMISSIONS_API_URL}?challengeId=${challengeId}&type=${type}`
     const token = await helper.getTopcoderM2Mtoken()
 
     try {
@@ -143,7 +143,7 @@ const helper = {
    * @returns {boolean} true if submission is reviewed
    */
   async isSubmissionReviewed(submissionId, typeId) {
-    const url = `${process.env.SUBMISSIONS_API_URL}/reviews?submissionId=${submissionId}`
+    const url = `${process.env.SUBMISSIONS_API_URL.replace('submissions', 'reviews')}?submissionId=${submissionId}`
     const token = await helper.getTopcoderM2Mtoken()
     try {
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
