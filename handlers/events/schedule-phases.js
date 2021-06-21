@@ -78,8 +78,10 @@ export const handlerReview = async (event, context, challengeId) => {
   if (helper.isPhaseOpen(challenge, CheckpointScreeningPhase)) {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Screening)
+    console.log(`reviews done: ${reviewsDone}`)
     if (reviewsDone) {
       if (helper.getPhase(challenge, CheckpointScreeningPhase)) {
+        console.log('should schedule the close of the checkpoint screening phase')
         apEvents.push({
           phaseId: CheckpointScreeningPhase,
           isOpen: false
@@ -166,6 +168,13 @@ export const handlerReview = async (event, context, challengeId) => {
 
   if (apEvents.length > 0) {
     // TODO: handle existing events?
+    console.log('events to be created: ', JSON.stringify(_.map(apEvents, e => ({
+      externalId: challenge.id,
+      scheduleTime: Date.now(),
+      payload: {
+        phases: e
+      }
+    }))))
     await helper.createEventsInExecutor(_.map(apEvents, e => ({
       externalId: challenge.id,
       scheduleTime: Date.now(),
