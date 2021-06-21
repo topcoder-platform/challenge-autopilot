@@ -324,7 +324,7 @@ const helper = {
   async extractFromDynamoStreamEvent(data, key) {
     const dynamoEvents = _.filter(_.get(data, 'Records', []), r => r.eventSource === AppConstants.EventSources.DynamoDB)
     return _.map(dynamoEvents, record => {
-      const obj = _.get(record, `dynamodb.Keys.${key}`)
+      const obj = _.get(record, `dynamodb.NewImage.${key}`)
       return {
         eventName: record.eventName,
         [key]: obj[_.keys(obj)[0]]
