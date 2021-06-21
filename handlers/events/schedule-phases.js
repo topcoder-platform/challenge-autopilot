@@ -124,6 +124,31 @@ export const handlerReview = async (event, context) => {
         })
       }
     }
+  } else if (helper.isPhaseOpen(challenge, ApprovalPhase)) {
+    const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.FINAL_FIX)
+    const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Approval)
+    const checkpointSubmissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
+    if (reviewsDone) {
+      // Close challenge
+      const winners = await helper.getChallengeWinners(challenge.id, submissions, checkpointSubmissions)
+      await helper.createEventsInExecutor([
+        {
+          externalId: challenge.id,
+          scheduleTime: Date.now(),
+          payload: {
+            status: ChallengeStatuses.COMPLETED,
+            phases: [
+              {
+                phaseId: ApprovalPhase,
+                isOpen: false
+              }
+            ],
+            winners
+          }
+        }
+      ])
+      return
+    }
   }
 
   if (apEvents.length > 0) {

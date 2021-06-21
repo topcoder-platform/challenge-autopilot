@@ -329,6 +329,85 @@ const helper = {
         [key]: obj[_.keys(obj)[0]]
       }
     })
+  },
+
+  /**
+   * Get the member handles based on their IDs
+   * @param {Array} userIds member IDs
+   */
+  async getMemberHandles(userIds) {
+    const url = `${process.env.MEMBERS_API_URL}`
+    const token = await helper.getTopcoderM2Mtoken()
+    try {
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` }, params: { userIds } })
+      const mapping = {}
+      _.each(res.data, (entry) => {
+        mapping[entry.userId] = entry.handle
+      })
+      return mapping
+    } catch (err) {
+      console.info(`Failed to get member handles: ${memberIds}`)
+      console.info(err.message)
+      throw err
+    }
+  },
+
+  /**
+   * Populate challenge winners
+   * @param {String} challengeId the challenge ID
+   * @param {Array} submissions the submissions
+   * @param {Array} checkpointSubmissions the checkpoint submissions
+   */
+  async getChallengeWinners(challengeId, submissions, checkpointSubmissions) {
+    const memberHandles = await helper.getMemberHandles([
+      ..._.map(checkpointSubmissions, s => s.memberId),
+      ..._.map(submissions, s => s.memberId)
+    ])
+    // TODO: get reviews NOT submissions
+    const checkpointReviews = []
+    _.each(checkpointSubmissions, (cs) => {
+      const checkpointReview = _.find(cs.reviews, r => r.status === 'completed' && r.typeId === AppConstants.ReviewType.CheckpointReview)
+      if (checkpointReview) {
+        checkpointReviews.push(checkpointReview)
+      }
+    })
+
+    const reviews = []
+    _.each(submissions, (s) => {
+      const review = _.find(s.reviews, r => r.status === 'completed' && r.typeId === AppConstants.ReviewType.Review)
+      if (review) {
+        reviews.push(review)
+      }
+    })
+
+    const winners = []
+    let placement = 1
+    _.each(_.filter(checkpointReviews, r => r.score === 100), (review) => {
+      if (review.status === 'completed') {
+        const submission = _.find(checkpointSubmissions, s => s.id === review.submissionId)
+        winners.push({
+          handle: memberHandles[submission.memberId],
+          placement,
+          type: AppConstants.PrizeTypes.CHECKPOINT,
+          userId: submission.memberId
+        })
+        placement += 1
+      }
+    })
+    placement = 1
+    _.each(_.orderBy(reviews, 'score', 'desc'), (review) => {
+      if (review.status === 'completed') {
+        const submission = _.find(submissions, s => s.id === review.submissionId)
+        winners.push({
+          handle: memberHandles[submission.memberId],
+          placement,
+          type: AppConstants.PrizeTypes.CHECKPOINT,
+          userId: submission.memberId
+        })
+        placement += 1
+      }
+    })
+    return winners
   }
 }
 

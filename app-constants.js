@@ -16,7 +16,9 @@ export const ReviewType = {
   CheckpointReview: 'c56a4180-65aa-42ec-a945-5fd21dec0502',
   Review: 'c56a4180-65aa-42ec-a945-5fd21dec0503',
   AppealsResponse: 'c56a4180-65aa-42ec-a945-5fd21dec0504',
-  IterativeReview: 'c56a4180-65aa-42ec-a945-5fd21dec0505'
+  IterativeReview: 'c56a4180-65aa-42ec-a945-5fd21dec0505',
+  FinalFix: '9ecc88e5-a4ee-44a4-8ec1-70bd98022510',
+  Approval: 'd6d31f34-8ee5-4589-ae65-45652fcc01a6'
 }
 
 export const EventPhaseIDs = {
@@ -56,5 +58,11 @@ export const ChallengeStatuses = {
 
 export const SubmissionTypes = {
   CONSTEST_SUBMISSION: 'Contest Submission',
-  CHECKPOINT_SUBMISSION: 'Checkpoint Submission'
+  CHECKPOINT_SUBMISSION: 'Checkpoint Submission',
+  FINAL_FIX: 'Final Fix Submission'
+}
+
+export const PrizeTypes = {
+  PLACEMENT: 'placement',
+  CHECKPOINT: 'checkpoint',
 }
