@@ -49,8 +49,6 @@ export const handlerChallenge = async (event, context) => {
       console.log('Events to be created:', JSON.stringify(newEvents))
       await helper.createEventsInExecutor(newEvents)
       console.info(`processing of the record completed, id: ${challenge.id}`)
-      // TODO: This may not be needed as it's supposed to happen instantly
-      await handlerReview(null, null, challenge.id)
     } else {
       console.info(`No need to update events for challenge ${challenge.id}`)
     }
@@ -168,20 +166,13 @@ export const handlerReview = async (event, context, challengeId) => {
 
   if (apEvents.length > 0) {
     // TODO: handle existing events?
-    console.log('events to be created: ', JSON.stringify(_.map(apEvents, e => ({
+    await helper.createEventsInExecutor({
       externalId: challenge.id,
       scheduleTime: Date.now(),
       payload: {
-        phases: e
+        phases: apEvents
       }
-    }))))
-    await helper.createEventsInExecutor(_.map(apEvents, e => ({
-      externalId: challenge.id,
-      scheduleTime: Date.now(),
-      payload: {
-        phases: e
-      }
-    })))
+    })
   }
   return
 }
