@@ -175,6 +175,7 @@ const helper = {
    */
   async checkIfAllSubmissionsReviewed(submissions, reviewType) {
     for (const oneSubmission of submissions) {
+      // TODO: Optimise this to not call the api for all submissions
       const reviewed = await isSubmissionReviewed(oneSubmission.id, reviewType)
       if (!reviewed) {
         return false
@@ -366,7 +367,7 @@ const helper = {
     // TODO: get reviews NOT submissions
     const checkpointReviews = []
     _.each(checkpointSubmissions, (cs) => {
-      const checkpointReview = _.find(cs.reviews, r => r.status === 'completed' && r.typeId === AppConstants.ReviewType.CheckpointReview)
+      const checkpointReview = _.find(cs.review, r => r.status === 'completed' && r.typeId === AppConstants.ReviewType.CheckpointReview)
       if (checkpointReview) {
         checkpointReviews.push(checkpointReview)
       }
@@ -374,7 +375,7 @@ const helper = {
 
     const reviews = []
     _.each(submissions, (s) => {
-      const review = _.find(s.reviews, r => r.status === 'completed' && r.typeId === AppConstants.ReviewType.Review)
+      const review = _.find(s.review, r => r.status === 'completed' && r.typeId === AppConstants.ReviewType.Review)
       if (review) {
         reviews.push(review)
       }

@@ -34,6 +34,7 @@ export const handlerChallenge = async (event, context) => {
     return
   }
   if (challengeDataFromEvent.eventName === EventNames.MODIFY) {
+    return
     // create events
     let newEvents = await helper.getEventsFromPhases(challenge, [])
     let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
