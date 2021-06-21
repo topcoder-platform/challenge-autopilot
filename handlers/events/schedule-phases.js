@@ -13,7 +13,7 @@ export const handlerChallenge = async (event, context) => {
   const challenge = await helper.getChallenge(challengeDataFromEvent.id)
 
   if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
-    console.info(`The challenge ${challengeId} is not Active or it's not pure V5. Skipping...`)
+    console.info(`The challenge ${challengeDataFromEvent.id} is not Active or it's not pure V5. Skipping...`)
     return
   }
 
