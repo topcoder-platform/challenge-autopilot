@@ -426,9 +426,7 @@ const helper = {
   aggregateEventPhases (oldEvents, newEvents) {
     const dateBasedEvents = {}
     _.each(oldEvents, (event) => {
-      dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = {
-        event
-      }
+      dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = event
     })
     _.each(newEvents, (event) => {
       if (dateBasedEvents[`${event.scheduleTime}-${event.externalId}`]) {
