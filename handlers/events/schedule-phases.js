@@ -95,7 +95,8 @@ export const handlerReview = async (event, context, challengeId) => {
         console.log('should schedule the close of the checkpoint screening phase')
         apEvents.push({
           phaseId: CheckpointScreeningPhase,
-          isOpen: false
+          isOpen: false,
+          actualEndDate: Date.now()
         })
       }
       if (helper.getPhase(challenge, CheckpointReviewPhase)) {
@@ -112,7 +113,8 @@ export const handlerReview = async (event, context, challengeId) => {
       if (helper.getPhase(challenge, CheckpointReviewPhase)) {
         apEvents.push({
           phaseId: CheckpointReviewPhase,
-          isOpen: false
+          isOpen: false,
+          actualEndDate: Date.now()
         })
       }
     }
@@ -123,7 +125,8 @@ export const handlerReview = async (event, context, challengeId) => {
       if (helper.getPhase(challenge, ScreeningPhase)) {
         apEvents.push({
           phaseId: ScreeningPhase,
-          isOpen: false
+          isOpen: false,
+          actualEndDate: Date.now()
         })
       }
       if (helper.getPhase(challenge, ReviewPhase)) {
@@ -140,7 +143,8 @@ export const handlerReview = async (event, context, challengeId) => {
       if (helper.getPhase(challenge, ReviewPhase)) {
         apEvents.push({
           phaseId: ReviewPhase,
-          isOpen: false
+          isOpen: false,
+          actualEndDate: Date.now()
         })
       }
       if (helper.getPhase(challenge, ApprovalPhase)) {
@@ -166,7 +170,8 @@ export const handlerReview = async (event, context, challengeId) => {
             phases: [
               {
                 phaseId: ApprovalPhase,
-                isOpen: false
+                isOpen: false,
+                actualEndDate: Date.now()
               }
             ],
             winners

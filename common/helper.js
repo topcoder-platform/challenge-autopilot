@@ -193,7 +193,8 @@ const helper = {
       if (EventPhaseIDs[phase.phaseId].close && new Date(phase.scheduledStartDate).getTime() <= Date.now() && phase.isOpen) {
         dateBasedEvents[phase.scheduledEndDate].push({
           phaseId: phase.phaseId,
-          isOpen: false
+          isOpen: false,
+          actualEndDate: phase.scheduledEndDate
         })
       }
       // TODO: Optimise this
