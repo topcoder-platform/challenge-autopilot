@@ -423,7 +423,7 @@ const helper = {
    * @param {Array} oldEvents the old events
    * @param {Array} newEvents the new events
    */
-  async aggregateEventPhases (oldEvents, newEvents) {
+  aggregateEventPhases (oldEvents, newEvents) {
     const dateBasedEvents = {}
     _.each(oldEvents, (event) => {
       dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = {
