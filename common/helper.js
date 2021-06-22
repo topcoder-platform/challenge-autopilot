@@ -209,7 +209,8 @@ const helper = {
           } else { // Should close the phase
             dateBasedEvents[phase.scheduledEndDate].push({
               phaseId: phase.phaseId,
-              isOpen: false
+              isOpen: false,
+              actualEndDate: phase.scheduledEndDate
             })
           }
         }

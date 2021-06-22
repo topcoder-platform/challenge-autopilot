@@ -44,11 +44,19 @@ export const EventPhaseIDs = {
   },
   [CheckpointScreeningPhase]: {
     open: true,
-    checkPrerequisites: (challenge, submissions) => !!_.find(submissions, s => s.type === SubmissionTypes.CHECKPOINT_SUBMISSION)
+    checkPrerequisites: (challenge, submissions) => {
+      const existingPhase = _.find(_.get(challenge, 'phases'), p => p.phaseId === CheckpointScreeningPhase)
+      if (!existingPhase || existingPhase.actualEndDate) return false
+      return !!_.find(submissions, s => s.type === SubmissionTypes.CHECKPOINT_SUBMISSION)
+    }
   },
   [ScreeningPhase]: {
     open: true,
-    checkPrerequisites: (challenge, submissions) => !!_.find(submissions, s => s.type === SubmissionTypes.CONSTEST_SUBMISSION)
+    checkPrerequisites: (challenge, submissions) => {
+      const existingPhase = _.find(_.get(challenge, 'phases'), p => p.phaseId === ScreeningPhase)
+      if (!existingPhase || existingPhase.actualEndDate) return false
+      return !!_.find(submissions, s => s.type === SubmissionTypes.CONSTEST_SUBMISSION)
+    }
   }
 }
 
