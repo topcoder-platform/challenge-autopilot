@@ -47,8 +47,8 @@ export const handlerChallenge = async (event, context) => {
       console.info(`Deleting existing events for challenge ${challenge.id}`)
       await helper.deleteEventsInExecutor(oldEvents)
       console.info(`Creating events for challenge ${challenge.id}`)
-      console.log('Events to be created:', JSON.stringify(newEvents))
-      await helper.createEventsInExecutor(newEvents)
+      console.log('Events to be created:', JSON.stringify(helper.aggregateEventPhases(oldEvents, newEvents)))
+      await helper.createEventsInExecutor(helper.aggregateEventPhases(oldEvents, newEvents))
       console.info(`processing of the record completed, id: ${challenge.id}`)
     } else {
       console.info(`No need to update events for challenge ${challenge.id}`)
@@ -206,16 +206,14 @@ export const handlerSubmission = async (event, context) => {
 
   // use the scheduleTime and phases to check if there is any change
   newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload }))
-  oldEvents = _.filter(_.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) })), (e) => {
-    return !!_.find(e.payload.phases, p => EventPhaseIDs[p.phaseId].withPrerequisites)
-  })
+  oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) }))
 
   if (!_.isEqual(newEvents, oldEvents)) {
     console.info(`Deleting existing events for challenge ${challenge.id}`)
     await helper.deleteEventsInExecutor(oldEvents)
     console.info(`Creating events for challenge ${challenge.id}`)
-    console.log('Events to be created:', JSON.stringify(newEvents))
-    await helper.createEventsInExecutor(newEvents)
+    console.log('Events to be created:', JSON.stringify(helper.aggregateEventPhases(oldEvents, newEvents)))
+    await helper.createEventsInExecutor(helper.aggregateEventPhases(oldEvents, newEvents))
     console.info(`processing of the record completed, id: ${challenge.id}`)
   } else {
     console.info(`No need to update events for challenge ${challenge.id}`)

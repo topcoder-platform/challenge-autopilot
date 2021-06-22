@@ -416,6 +416,51 @@ const helper = {
       }
     })
     return winners
+  },
+
+  /**
+   * Aggregate the phase arrays of the events
+   * @param {Array} oldEvents the old events
+   * @param {Array} newEvents the new events
+   */
+  async aggregateEventPhases (oldEvents, newEvents) {
+    const dateBasedEvents = {}
+    _.each(oldEvents, (event) => {
+      dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = {
+        event
+      }
+    })
+    _.each(newEvents, (event) => {
+      if (dateBasedEvents[`${event.scheduleTime}-${event.externalId}`]) {
+        // overwrite
+        const phases = []
+        const phaseMap = {}
+        _.each(_.get(dateBasedEvents[`${event.scheduleTime}-${event.externalId}`], 'payload.phases', []), (p) => {
+          phaseMap[p.phaseId] = p.isOpen
+        })
+        _.each(_.get(event, 'payload.phases', []), (p) => {
+          phaseMap[p.phaseId] = p.isOpen
+        })
+        _.each(phaseMap, (isOpen, phaseId) => {
+          phases.push({ phaseId, isOpen })
+        })
+        dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = {
+          ...dateBasedEvents[`${event.scheduleTime}-${event.externalId}`],
+          payload: {
+            ...dateBasedEvents[`${event.scheduleTime}-${event.externalId}`].payload,
+            phases
+          }
+        }
+      } else {
+        dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = {
+          event
+        }
+      }
+    })
+    const events = []
+    _.each(dateBasedEvents, (eventData, scheduleTime) => {
+      events.push(eventData)
+    })
   }
 }
 
