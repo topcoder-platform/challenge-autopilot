@@ -9,7 +9,8 @@ import {
   ReviewPhase,
   ApprovalPhase,
   SubmissionTypes,
-  ReviewType
+  ReviewType,
+  EventPhaseIDs
 } from '../../app-constants'
 
 /* Responds to challenge table insert/update - schedules phases */
@@ -189,9 +190,35 @@ export const handlerReview = async (event, context, challengeId) => {
 
 /* Responds to submission table insert/update - schedules phases */
 export const handlerSubmission = async (event, context) => {
-  console.log('event:', event)
-  console.log('event:', JSON.stringify(event))
-  // const submissionId = event.detail.newImage.id
-  // const challengeId = event.detail.newImage.challengeId
+  // This will only process the first element of the array. If we use batches,
+  // we'll have to modify this to loop through records
+  const [challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'challengeId')
+  const challenge = await helper.getChallenge(challengeDataFromEvent.challengeId)
+
+  if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
+    console.info(`The challenge ${challengeDataFromEvent.id} is not Active or it's not pure V5. Skipping...`)
+    return
+  }
+
+  // create events
+  let newEvents = await helper.getEventsFromPhases(challenge, [], true)
+  let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
+
+  // use the scheduleTime and phases to check if there is any change
+  newEvents = _.map(newEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: item.payload }))
+  oldEvents = _.filter(_.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) })), (e) => {
+    return !!_.find(e.payload.phases, p => EventPhaseIDs[p.phaseId].withPrerequisites)
+  })
+
+  if (!_.isEqual(newEvents, oldEvents)) {
+    console.info(`Deleting existing events for challenge ${challenge.id}`)
+    await helper.deleteEventsInExecutor(oldEvents)
+    console.info(`Creating events for challenge ${challenge.id}`)
+    console.log('Events to be created:', JSON.stringify(newEvents))
+    await helper.createEventsInExecutor(newEvents)
+    console.info(`processing of the record completed, id: ${challenge.id}`)
+  } else {
+    console.info(`No need to update events for challenge ${challenge.id}`)
+  }
   return
 }

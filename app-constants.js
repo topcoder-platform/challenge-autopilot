@@ -35,10 +35,12 @@ export const EventPhaseIDs = {
     close: true
   },
   [CheckpointScreeningPhase]: {
-    open: true
+    open: true,
+    withPrerequisites: true
   },
   [ScreeningPhase]: {
-    open: true
+    open: true,
+    withPrerequisites: true
   }
 }
 

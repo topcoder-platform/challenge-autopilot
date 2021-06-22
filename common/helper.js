@@ -187,14 +187,21 @@ const helper = {
    * Create events from challenge object
    * @param challenge the challenge object
    * @param extraEvents the extra events need to handle
+   * @param withPrerequisites flag to only get events for phases with prerequisites
    */
-  async getEventsFromPhases(challenge, extraEvents) {
+  async getEventsFromPhases(challenge, extraEvents, withPrerequisites) {
     const events = []
     const dateBasedEvents = {}
 
     for (const phase of challenge.phases) {
       // if the phase is not the predefined phase, ignore it
       if (!_.keys(EventPhaseIDs).includes(phase.phaseId)) {
+        continue
+      }
+      if (!withPrerequisites && EventPhaseIDs[phase.phaseId].withPrerequisites) {
+        continue
+      }
+      if (withPrerequisites && !EventPhaseIDs[phase.phaseId].withPrerequisites) {
         continue
       }
       if (!dateBasedEvents[phase.scheduledStartDate]) {
