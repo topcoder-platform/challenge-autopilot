@@ -120,7 +120,7 @@ const helper = {
    * @returns {boolean} if all submissions get reviewed
    */
   async checkIfAllSubmissionsReviewed(submissions, reviewType) {
-    return _.filter(submissions, s => _.findIndex(_.get(s, 'review', []), r => r.typeId === reviewType && r.type !== 'completed') > -1).length === 0
+    return _.filter(submissions, s => _.findIndex(_.get(s, 'review', []), r => r.typeId === reviewType && r.status !== 'completed') > -1).length === 0
   },
   /**
    * Create events from challenge object
