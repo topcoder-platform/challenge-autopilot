@@ -24,32 +24,6 @@ const helper = {
   isPhaseOpen(challenge, phaseId) {
     return _.get(_.find(_.get(challenge, 'phases'), p => p.phaseId === phaseId), 'isOpen', false)
   },
-  /**
-   * Check prerequisites to close a phase
-   * @param {Array} dateBasedEvents the events array
-   * @param {Object} phase the phase
-   * @param {String} challengeId the challenge ID
-   */
-  async checkPhasePrerequisites(dateBasedEvents, phase, challengeId) {
-    // Checkpoint Submission Phase is closing...
-    if (phase.phaseId === AppConstants.CheckpointSubmissionPhase) {
-      const existsSubmission = await helper.getChallengeSubmissions(challengeId, AppConstants.SubmissionTypes.CHECKPOINT_SUBMISSION)
-      if (existsSubmission) {
-        dateBasedEvents[phase.scheduledStartDate].push({
-          phaseId: AppConstants.CheckpointScreeningPhase,
-          isOpen: true
-        })
-      }
-    } else if (phase.phaseId === AppConstants.SubmissionPhase) {
-      const existsSubmission = await helper.getChallengeSubmissions(challengeId, AppConstants.SubmissionTypes.CONSTEST_SUBMISSION)
-      if (existsSubmission) {
-        dateBasedEvents[phase.scheduledStartDate].push({
-          phaseId: AppConstants.ScreeningPhase,
-          isOpen: true
-        })
-      }
-    }
-  },
 
   /**
    * Function to get M2M token
@@ -118,12 +92,15 @@ const helper = {
    * @param type the submission type
    * @returns {Array} array of challenges
    */
-  async getChallengeSubmissions(challengeId, type = AppConstants.SubmissionTypes.CONSTEST_SUBMISSION) {
-    const url = `${process.env.SUBMISSIONS_API_URL}?challengeId=${challengeId}&type=${type}`
+  async getChallengeSubmissions(challengeId, type) {
+    let url = `${process.env.SUBMISSIONS_API_URL}?challengeId=${challengeId}`
+    if (type) {
+      url = `${url}&type=${type}`
+    }
     const token = await helper.getTopcoderM2Mtoken()
 
     try {
-      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` }, } })
       return res.data
     } catch (err) {
       console.info(err.message)
@@ -187,9 +164,9 @@ const helper = {
    * Create events from challenge object
    * @param challenge the challenge object
    * @param extraEvents the extra events need to handle
-   * @param withPrerequisites flag to only get events for phases with prerequisites
+   * @param submissions the submissions used to check prerequisites
    */
-  async getEventsFromPhases(challenge, extraEvents, withPrerequisites) {
+  async getEventsFromPhases(challenge, extraEvents, submissions) {
     const events = []
     const dateBasedEvents = {}
 
@@ -198,10 +175,7 @@ const helper = {
       if (!_.keys(EventPhaseIDs).includes(phase.phaseId)) {
         continue
       }
-      if (!withPrerequisites && EventPhaseIDs[phase.phaseId].withPrerequisites) {
-        continue
-      }
-      if (withPrerequisites && !EventPhaseIDs[phase.phaseId].withPrerequisites) {
+      if (EventPhaseIDs[phase.phaseId].checkPrerequisites && !EventPhaseIDs[phase.phaseId].checkPrerequisites(challenge, submissions)) {
         continue
       }
       if (!dateBasedEvents[phase.scheduledStartDate]) {
@@ -221,8 +195,6 @@ const helper = {
           phaseId: phase.phaseId,
           isOpen: false
         })
-        // TODO: need to rethink about this one
-        // await helper.checkPhasePrerequisites(dateBasedEvents, phase, challenge.id)
       }
       // TODO: Optimise this
       // Handle extraEvents
@@ -371,7 +343,7 @@ const helper = {
       ..._.map(checkpointSubmissions, s => s.memberId),
       ..._.map(submissions, s => s.memberId)
     ])
-    // TODO: get reviews NOT submissions
+    // Take into account the number of checkpoint prizes
     const checkpointReviews = []
     _.each(checkpointSubmissions, (cs) => {
       const checkpointReview = _.find(cs.review, r => r.status === 'completed' && r.typeId === AppConstants.ReviewType.CheckpointReview)

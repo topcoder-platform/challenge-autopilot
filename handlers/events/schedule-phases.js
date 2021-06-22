@@ -25,9 +25,11 @@ export const handlerChallenge = async (event, context) => {
     return
   }
 
+  const submissions = await helper.getChallengeSubmissions(challenge.id)
+
   if (challengeDataFromEvent.eventName === EventNames.INSERT) {
     // create events
-    const events = await helper.getEventsFromPhases(challenge, [])
+    const events = await helper.getEventsFromPhases(challenge, [], submissions)
     // call the executor api
     await helper.createEventsInExecutor(events)
     console.log('Events to be created:', JSON.stringify(events))
@@ -36,7 +38,7 @@ export const handlerChallenge = async (event, context) => {
   }
   if (challengeDataFromEvent.eventName === EventNames.MODIFY) {
     // create events
-    let newEvents = await helper.getEventsFromPhases(challenge, [])
+    let newEvents = await helper.getEventsFromPhases(challenge, [], submissions)
     let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
 
     // use the scheduleTime and phases to check if there is any change
@@ -176,7 +178,7 @@ export const handlerReview = async (event, context, challengeId) => {
   }
 
   if (apEvents.length > 0) {
-    // TODO: handle existing events?
+    // TODO: why not calling the API directly instead of scheduling the changes?
     await helper.createEventsInExecutor([{
       externalId: challenge.id,
       scheduleTime: Date.now(),
@@ -196,12 +198,13 @@ export const handlerSubmission = async (event, context) => {
   const challenge = await helper.getChallenge(challengeDataFromEvent.challengeId)
 
   if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
-    console.info(`The challenge ${challengeDataFromEvent.id} is not Active or it's not pure V5. Skipping...`)
+    console.info(`The challenge ${challengeDataFromEvent.challengeId} is not Active or it's not pure V5. Skipping...`)
     return
   }
+  const submissions = await helper.getChallengeSubmissions(challenge.id)
 
   // create events
-  let newEvents = await helper.getEventsFromPhases(challenge, [], true)
+  let newEvents = await helper.getEventsFromPhases(challenge, [], submissions)
   let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
 
   // use the scheduleTime and phases to check if there is any change

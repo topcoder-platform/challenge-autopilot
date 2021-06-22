@@ -1,3 +1,5 @@
+const _ = require('lodash')
+
 /**
  * App constants
  */
@@ -21,6 +23,12 @@ export const ReviewType = {
   Approval: 'd6d31f34-8ee5-4589-ae65-45652fcc01a6'
 }
 
+export const SubmissionTypes = {
+  CONSTEST_SUBMISSION: 'Contest Submission',
+  CHECKPOINT_SUBMISSION: 'Checkpoint Submission',
+  FINAL_FIX: 'Final Fix Submission'
+}
+
 export const EventPhaseIDs = {
   [RegistrationPhase]: {
     open: true,
@@ -36,11 +44,11 @@ export const EventPhaseIDs = {
   },
   [CheckpointScreeningPhase]: {
     open: true,
-    withPrerequisites: true
+    checkPrerequisites: (challenge, submissions) => !!_.find(submissions, s => s.type === SubmissionTypes.CHECKPOINT_SUBMISSION)
   },
   [ScreeningPhase]: {
     open: true,
-    withPrerequisites: true
+    checkPrerequisites: (challenge, submissions) => !!_.find(submissions, s => s.type === SubmissionTypes.CONSTEST_SUBMISSION)
   }
 }
 
@@ -56,12 +64,6 @@ export const EventNames = {
 export const ChallengeStatuses = {
   ACTIVE: 'Active',
   COMPLETED: 'Completed'
-}
-
-export const SubmissionTypes = {
-  CONSTEST_SUBMISSION: 'Contest Submission',
-  CHECKPOINT_SUBMISSION: 'Checkpoint Submission',
-  FINAL_FIX: 'Final Fix Submission'
 }
 
 export const PrizeTypes = {
