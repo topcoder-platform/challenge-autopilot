@@ -114,51 +114,13 @@ const helper = {
   },
 
   /**
-   * Check if a submission get reviewed
-   * @param submissionId the submission id
-   * @param typeId the review type id
-   * @returns {boolean} true if submission is reviewed
-   */
-  async isSubmissionReviewed(submissionId, typeId) {
-    const url = `${process.env.SUBMISSIONS_API_URL.replace('submissions', 'reviews')}?submissionId=${submissionId}`
-    const token = await helper.getTopcoderM2Mtoken()
-    try {
-      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
-      const reviews = res.data
-      if (reviews && reviews.length > 0) {
-        const targetReview = _.find(reviews, r => r.typeId === typeId)
-        if (!targetReview) return false // not yet submitted
-        return targetReview.status === 'completed'
-      }
-      console.info(`The Submission with the id: ${submissionId} doens't have review records`)
-      return false
-    } catch (err) {
-      console.info(err.message)
-      if (err.response) {
-        if (err.response.status === 404) {
-          console.info(`The Submission with the id: ${submissionId} not exist`)
-        }
-      }
-      console.info(`get ${url} failed`)
-    }
-    return false
-  },
-
-  /**
    * Check if all submissions get reviewed
    * @param submissions the submissions
    * @param reviewType the review type
    * @returns {boolean} if all submissions get reviewed
    */
   async checkIfAllSubmissionsReviewed(submissions, reviewType) {
-    for (const oneSubmission of submissions) {
-      // TODO: Optimise this to not call the api for all submissions
-      const reviewed = await helper.isSubmissionReviewed(oneSubmission.id, reviewType)
-      if (!reviewed) {
-        return false
-      }
-    }
-    return true
+    return _.filter(submissions, s => _.findIndex(_.get(s, 'reivew', []), r => r.typeId === reviewType && r.type !== 'completed') > -1).length === 0
   },
   /**
    * Create events from challenge object
