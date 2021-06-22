@@ -344,7 +344,7 @@ const helper = {
         winners.push({
           handle: memberHandles[submission.memberId],
           placement,
-          type: AppConstants.PrizeTypes.CHECKPOINT,
+          type: AppConstants.PrizeTypes.PLACEMENT,
           userId: submission.memberId
         })
         placement += 1
