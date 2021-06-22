@@ -100,7 +100,7 @@ const helper = {
     const token = await helper.getTopcoderM2Mtoken()
 
     try {
-      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` }, } })
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
       return res.data
     } catch (err) {
       console.info(err.message)
