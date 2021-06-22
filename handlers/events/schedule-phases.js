@@ -155,12 +155,13 @@ export const handlerReview = async (event, context, challengeId) => {
       }
     }
   } else if (helper.isPhaseOpen(challenge, ApprovalPhase)) {
-    const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.FINAL_FIX)
-    const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Approval)
+    const finalFix = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.FINAL_FIX)
+    const reviewsDone = await helper.checkIfAllSubmissionsReviewed(finalFix, ReviewType.Approval)
+    const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
     const checkpointSubmissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
     if (reviewsDone) {
       // Close challenge
-      const winners = await helper.getChallengeWinners(challenge.id, submissions, checkpointSubmissions)
+      const winners = await helper.getChallengeWinners(submissions, checkpointSubmissions)
       await helper.createEventsInExecutor([
         {
           externalId: challenge.id,

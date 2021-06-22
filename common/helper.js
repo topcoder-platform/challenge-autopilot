@@ -298,11 +298,10 @@ const helper = {
 
   /**
    * Populate challenge winners
-   * @param {String} challengeId the challenge ID
    * @param {Array} submissions the submissions
    * @param {Array} checkpointSubmissions the checkpoint submissions
    */
-  async getChallengeWinners(challengeId, submissions, checkpointSubmissions) {
+  async getChallengeWinners(submissions, checkpointSubmissions) {
     const memberHandles = await helper.getMemberHandles([
       ..._.map(checkpointSubmissions, s => s.memberId),
       ..._.map(submissions, s => s.memberId)
