@@ -450,9 +450,7 @@ const helper = {
           }
         }
       } else {
-        dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = {
-          event
-        }
+        dateBasedEvents[`${event.scheduleTime}-${event.externalId}`] = event
       }
     })
     const events = []
