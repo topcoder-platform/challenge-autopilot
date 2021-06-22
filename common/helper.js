@@ -461,6 +461,7 @@ const helper = {
     _.each(dateBasedEvents, (eventData, scheduleTime) => {
       events.push(eventData)
     })
+    return events
   }
 }
 
