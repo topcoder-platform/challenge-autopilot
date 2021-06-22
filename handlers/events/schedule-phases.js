@@ -49,8 +49,8 @@ export const handlerChallenge = async (event, context) => {
       console.info(`Deleting existing events for challenge ${challenge.id}`)
       await helper.deleteEventsInExecutor(oldEvents)
       console.info(`Creating events for challenge ${challenge.id}`)
-      console.log('Events to be created:', JSON.stringify(helper.aggregateEventPhases(oldEvents, newEvents)))
-      await helper.createEventsInExecutor(helper.aggregateEventPhases(oldEvents, newEvents))
+      console.log('Events to be created:', JSON.stringify(newEvents))
+      await helper.createEventsInExecutor(newEvents)
       console.info(`processing of the record completed, id: ${challenge.id}`)
     } else {
       console.info(`No need to update events for challenge ${challenge.id}`)
@@ -215,8 +215,8 @@ export const handlerSubmission = async (event, context) => {
     console.info(`Deleting existing events for challenge ${challenge.id}`)
     await helper.deleteEventsInExecutor(oldEvents)
     console.info(`Creating events for challenge ${challenge.id}`)
-    console.log('Events to be created:', JSON.stringify(helper.aggregateEventPhases(oldEvents, newEvents)))
-    await helper.createEventsInExecutor(helper.aggregateEventPhases(oldEvents, newEvents))
+    console.log('Events to be created:', JSON.stringify(newEvents))
+    await helper.createEventsInExecutor(newEvents)
     console.info(`processing of the record completed, id: ${challenge.id}`)
   } else {
     console.info(`No need to update events for challenge ${challenge.id}`)
