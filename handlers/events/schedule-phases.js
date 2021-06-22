@@ -58,10 +58,16 @@ export const handlerChallenge = async (event, context) => {
 }
 
 export const handlerReview = async (event, context, challengeId) => {
-  let challenge
+  let challenge, reviewDataFromDynamo
   if (event) {
     console.log('event:', JSON.stringify(event))
-    const [reviewDataFromDynamo] = await helper.extractFromDynamoStreamEvent(event, 'submissionId')
+    try {
+      const [data] = await helper.extractFromDynamoStreamEvent(event, 'submissionId')
+      reviewDataFromDynamo = data
+    } catch (e) {
+      console.log('Could not extract required information')
+      return
+    }
     if (reviewDataFromDynamo.eventName !== EventNames.INSERT && reviewDataFromDynamo.eventName !== EventNames.MODIFY) {
       console.log(`Event ${reviewDataFromDynamo.eventName} is not supported`)
       return
