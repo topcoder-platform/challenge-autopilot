@@ -120,6 +120,7 @@ const helper = {
    * @returns {boolean} if all submissions get reviewed
    */
   async checkIfAllSubmissionsReviewed(submissions, reviewType) {
+    if (submissions.length === 0) return false
     return _.filter(submissions, s => _.findIndex(_.get(s, 'review', []), r => r.typeId === reviewType && r.status !== 'completed') > -1).length === 0
   },
   /**
