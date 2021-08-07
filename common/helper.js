@@ -92,7 +92,7 @@ const helper = {
    * @param type the submission type
    * @returns {Array} array of challenges
    */
-  async getChallengeSubmissions(challengeId, type = AppConstants.SubmissionTypes.CONSTEST_SUBMISSION) {
+  async getChallengeSubmissions(challengeId, type) {
     let url = `${process.env.SUBMISSIONS_API_URL}?challengeId=${challengeId}`
     if (type) {
       url = `${url}&type=${type}`
