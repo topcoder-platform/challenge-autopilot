@@ -77,10 +77,10 @@ export const handlerReview = async (event, context, challengeId) => {
     }
     console.log('data: ', JSON.stringify(reviewDataFromDynamo))
     const submission = await helper.getSubmissionById(reviewDataFromDynamo.submissionId)
-    console.info(`Processing reviews for challenge ${submission.challengeId}`)
+    console.info(`Processing reviews for challenge ${submission.challengeId} by event`)
     challenge = await helper.getChallenge(submission.challengeId)
   } else if (challengeId) {
-    console.info(`Processing reviews for challenge ${challengeId}`)
+    console.info(`Processing reviews for challenge ${challengeId} by challenge ID`)
     challenge = await helper.getChallenge(challengeId)
   } else {
     return
