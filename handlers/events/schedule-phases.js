@@ -64,9 +64,6 @@ export const handlerReview = async (event, context, challengeId) => {
   let challenge, reviewDataFromDynamo
   if (event) {
     console.log('event:', JSON.stringify(event))
-    await new Promise((resolve) => {
-      setTimeout(() => resolve(), 1000 * 15)
-    })
     try {
       const [data] = await helper.extractFromDynamoStreamEvent(event, 'submissionId')
       reviewDataFromDynamo = data
@@ -84,9 +81,6 @@ export const handlerReview = async (event, context, challengeId) => {
     challenge = await helper.getChallenge(submission.challengeId)
   } else if (challengeId) {
     console.info(`Processing reviews for challenge ${challengeId} by challenge ID`)
-    await new Promise((resolve) => {
-      setTimeout(() => resolve(), 1000 * 5)
-    })
     challenge = await helper.getChallenge(challengeId)
   } else {
     return
