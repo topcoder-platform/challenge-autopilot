@@ -162,6 +162,9 @@ export const handlerReview = async (event, context, challengeId) => {
     if (reviewsDone) {
       // Close challenge
       const winners = await helper.getChallengeWinners(submissions, checkpointSubmissions)
+      let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
+      oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) }))
+      await helper.deleteEventsInExecutor(oldEvents)
       await helper.createEventsInExecutor([
         {
           challengeId: challenge.id,
@@ -186,6 +189,9 @@ export const handlerReview = async (event, context, challengeId) => {
 
   console.log('events to be created: ', JSON.stringify(apEvents))
   if (apEvents.length > 0) {
+    let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
+    oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) }))
+    await helper.deleteEventsInExecutor(oldEvents)
     // TODO: why not calling the API directly instead of scheduling the changes?
     await helper.createEventsInExecutor([{
       challengeId: challenge.id,
