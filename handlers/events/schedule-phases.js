@@ -96,7 +96,7 @@ export const handlerReview = async (event, context, challengeId) => {
         apEvents.push({
           phaseId: CheckpointScreeningPhase,
           isOpen: false,
-          actualEndDate: Date.now()
+          actualEndDate: new Date().toISOString()
         })
       }
       if (helper.getPhase(challenge, CheckpointReviewPhase)) {
@@ -114,7 +114,7 @@ export const handlerReview = async (event, context, challengeId) => {
         apEvents.push({
           phaseId: CheckpointReviewPhase,
           isOpen: false,
-          actualEndDate: Date.now()
+          actualEndDate: new Date().toISOString()
         })
       }
     }
@@ -126,7 +126,7 @@ export const handlerReview = async (event, context, challengeId) => {
         apEvents.push({
           phaseId: ScreeningPhase,
           isOpen: false,
-          actualEndDate: Date.now()
+          actualEndDate: new Date().toISOString()
         })
       }
       if (helper.getPhase(challenge, ReviewPhase)) {
@@ -144,7 +144,7 @@ export const handlerReview = async (event, context, challengeId) => {
         apEvents.push({
           phaseId: ReviewPhase,
           isOpen: false,
-          actualEndDate: Date.now()
+          actualEndDate: new Date().toISOString()
         })
       }
       if (helper.getPhase(challenge, ApprovalPhase)) {
@@ -169,14 +169,14 @@ export const handlerReview = async (event, context, challengeId) => {
         {
           challengeId: challenge.id,
           externalId: `${challenge.id}-forced`, // those won't be deleted
-          scheduleTime: Date.now(),
+          scheduleTime: new Date().toISOString(),
           payload: {
             status: ChallengeStatuses.COMPLETED,
             phases: [
               {
                 phaseId: ApprovalPhase,
                 isOpen: false,
-                actualEndDate: Date.now()
+                actualEndDate: new Date().toISOString()
               }
             ],
             winners
@@ -196,7 +196,7 @@ export const handlerReview = async (event, context, challengeId) => {
     await helper.createEventsInExecutor([{
       challengeId: challenge.id,
       externalId: `${challenge.id}-forced`, // those won't be deleted
-      scheduleTime: Date.now(),
+      scheduleTime: new Date().toISOString(),
       payload: {
         phases: apEvents
       }
