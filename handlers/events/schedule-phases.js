@@ -83,6 +83,7 @@ export const handlerReview = async (event, context, challengeId) => {
     console.info(`Processing reviews for challenge ${challengeId} by challenge ID`)
     challenge = await helper.getChallenge(challengeId)
   } else {
+    console.info('Nothing to do here...')
     return
   }
   const apEvents = []
