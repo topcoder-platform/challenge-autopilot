@@ -15,9 +15,6 @@ import {
 
 /* Responds to challenge table insert/update - schedules phases */
 export const handlerChallenge = async (event, context) => {
-  await new Promise((resolve) => {
-    setTimeout(() => resolve(), 1000 * 15)
-  })
   // This will only process the first element of the array. If we use batches,
   // we'll have to modify this to loop through records
   const [challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'id')
@@ -64,12 +61,12 @@ export const handlerChallenge = async (event, context) => {
 }
 
 export const handlerReview = async (event, context, challengeId) => {
-  await new Promise((resolve) => {
-    setTimeout(() => resolve(), 1000 * 15)
-  })
   let challenge, reviewDataFromDynamo
   if (event) {
     console.log('event:', JSON.stringify(event))
+    await new Promise((resolve) => {
+      setTimeout(() => resolve(), 1000 * 15)
+    })
     try {
       const [data] = await helper.extractFromDynamoStreamEvent(event, 'submissionId')
       reviewDataFromDynamo = data
@@ -87,6 +84,9 @@ export const handlerReview = async (event, context, challengeId) => {
     challenge = await helper.getChallenge(submission.challengeId)
   } else if (challengeId) {
     console.info(`Processing reviews for challenge ${challengeId} by challenge ID`)
+    await new Promise((resolve) => {
+      setTimeout(() => resolve(), 1000 * 15)
+    })
     challenge = await helper.getChallenge(challengeId)
   } else {
     return
@@ -213,9 +213,6 @@ export const handlerReview = async (event, context, challengeId) => {
 
 /* Responds to submission table insert/update - schedules phases */
 export const handlerSubmission = async (event, context) => {
-  await new Promise((resolve) => {
-    setTimeout(() => resolve(), 1000 * 15)
-  })
   // This will only process the first element of the array. If we use batches,
   // we'll have to modify this to loop through records
   const [challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'challengeId')
