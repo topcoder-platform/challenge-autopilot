@@ -207,7 +207,7 @@ const helper = {
       try {
         // schedule executor api payload
         const executorPayload = {
-          url: `${process.env.CHALLENGE_API_URL}/${event.externalId}`,
+          url: `${process.env.CHALLENGE_API_URL}/${event.challengeId || event.externalId}`,
           externalId: event.externalId,
           method: 'patch',
           scheduleTime: event.scheduleTime,

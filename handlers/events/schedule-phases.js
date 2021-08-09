@@ -164,7 +164,8 @@ export const handlerReview = async (event, context, challengeId) => {
       const winners = await helper.getChallengeWinners(submissions, checkpointSubmissions)
       await helper.createEventsInExecutor([
         {
-          externalId: challenge.id,
+          challengeId: challenge.id,
+          externalId: `${challenge.id}-forced`, // those won't be deleted
           scheduleTime: Date.now(),
           payload: {
             status: ChallengeStatuses.COMPLETED,
@@ -187,7 +188,8 @@ export const handlerReview = async (event, context, challengeId) => {
   if (apEvents.length > 0) {
     // TODO: why not calling the API directly instead of scheduling the changes?
     await helper.createEventsInExecutor([{
-      externalId: challenge.id,
+      challengeId: challenge.id,
+      externalId: `${challenge.id}-forced`, // those won't be deleted
       scheduleTime: Date.now(),
       payload: {
         phases: apEvents
