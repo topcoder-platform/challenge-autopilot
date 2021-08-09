@@ -85,7 +85,7 @@ export const handlerReview = async (event, context, challengeId) => {
   } else if (challengeId) {
     console.info(`Processing reviews for challenge ${challengeId} by challenge ID`)
     await new Promise((resolve) => {
-      setTimeout(() => resolve(), 1000 * 15)
+      setTimeout(() => resolve(), 1000 * 5)
     })
     challenge = await helper.getChallenge(challengeId)
   } else {
