@@ -183,6 +183,7 @@ export const handlerReview = async (event, context, challengeId) => {
     }
   }
 
+  console.log('events to be created: ', JSON.stringify(apEvents))
   if (apEvents.length > 0) {
     // TODO: why not calling the API directly instead of scheduling the changes?
     await helper.createEventsInExecutor([{
