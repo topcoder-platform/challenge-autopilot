@@ -55,7 +55,7 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
-      APPNAME: "tc-eventbridge"  
+      APPNAME: "tc-challenge-autopilot"  
       # deploy app
     steps: *build_steps
 
@@ -65,7 +65,7 @@ jobs:
     environment:
       DEPLOY_ENV: "PROD"
       LOGICAL_ENV: "prod"
-      APPNAME: "tc-eventbridge"  
+      APPNAME: "tc-challenge-autopilot"  
       # deploy app
     steps: *build_steps
 
