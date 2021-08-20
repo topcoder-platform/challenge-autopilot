@@ -1,4 +1,4 @@
-service: eventbridge-poc
+service: challenge-autopilot
 frameworkVersion: "2"
 
 provider:
