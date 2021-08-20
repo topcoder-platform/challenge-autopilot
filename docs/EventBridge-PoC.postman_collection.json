@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "a4df04d8-f634-41b4-92a6-2c60775e64d6",
-		"name": "EventBridge PoC",
+		"name": "Challenge Autopilot",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [

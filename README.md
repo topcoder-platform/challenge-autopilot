@@ -1,4 +1,4 @@
-# Topcoder EventBridge PoC
+# Topcoder Challenge Autopilot
 
 <img src="./docs/images/diagram.png" width="500px" />
 
@@ -27,7 +27,7 @@ Proof of concept application that processes schedule phases updates.
    nvm use
    ```
 - Requires [Serverless Framework CLI](https://www.serverless.com/framework/docs/getting-started/) to be installed. Credentials for your AWS account will also need to be [configured](https://www.serverless.com/framework/docs/providers/aws/guide/credentials/).
-- In the `eventbridge-poc` root directory create `.env` file with the next environment variables. Values for **Auth0 config** should be shared with you on the forum.<br>
+- In the `challenge-autopilot` root directory create `.env` file with the next environment variables. Values for **Auth0 config** should be shared with you on the forum.<br>
    ```bash
    # Auth0 config
    AUTH0_URL=
