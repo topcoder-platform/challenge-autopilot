@@ -18,7 +18,14 @@ export const handlerChallenge = async (event, context) => {
   // This will only process the first element of the array. If we use batches,
   // we'll have to modify this to loop through records
   console.log('event:', JSON.stringify(event))
-  const [challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'id')
+  let challengeDataFromEvent
+  try {
+    const [_challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'id')
+    challengeDataFromEvent = _challengeDataFromEvent
+  } catch (e) {
+    console.log('Could not extract required information')
+    return
+  }
   const challenge = await helper.getChallenge(challengeDataFromEvent.id)
 
   if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
@@ -211,7 +218,14 @@ export const handlerReview = async (event, context, challengeId) => {
 export const handlerSubmission = async (event, context) => {
   // This will only process the first element of the array. If we use batches,
   // we'll have to modify this to loop through records
-  const [challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'challengeId')
+  let challengeDataFromEvent
+  try {
+    const [_challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'challengeId')
+    challengeDataFromEvent = _challengeDataFromEvent
+  } catch (e) {
+    console.log('Could not extract required information')
+    return
+  }
   const challenge = await helper.getChallenge(challengeDataFromEvent.challengeId)
 
   if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
