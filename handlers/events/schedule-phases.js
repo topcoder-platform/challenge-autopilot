@@ -17,6 +17,7 @@ import {
 export const handlerChallenge = async (event, context) => {
   // This will only process the first element of the array. If we use batches,
   // we'll have to modify this to loop through records
+  console.log('event:', JSON.stringify(event))
   const [challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'id')
   const challenge = await helper.getChallenge(challengeDataFromEvent.id)
 
