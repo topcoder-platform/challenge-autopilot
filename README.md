@@ -18,6 +18,8 @@ Proof of concept application that processes schedule phases updates.
 - SCHEDULE_API_URL: the url of the schedule api
 - CHALLENGE_API_URL: the url of the challenge api
 - SUBMISSIONS_API_URL: the url of the submissions api
+- RESOURCE_TABLE_STREAM_ARN: The ARN of the DynamoDB stream of the Resource table (See how to enable stream on Resource table and get its ARN: https://monosnap.com/direct/5ihHDWNa2cvrkPjaacxnUBJlLqxt0j)
+   The DynamoDB stream of the Resource table should use 'New and old Images' view type
 *Note, _All these are set via the environment variables.
 
 ## Install and deploy
@@ -42,6 +44,7 @@ Proof of concept application that processes schedule phases updates.
    SUBMISSION_REVIEWS_TABLE=
    SUBMISSIONS_TABLE=
    CREATE_CLOUDTRAIL=
+   RESOURCE_TABLE_STREAM_ARN=
 
    # Depending services
    SCHEDULE_API_URL=https://api.topcoder-dev.com/v5/schedules
@@ -78,6 +81,19 @@ Proof of concept application that processes schedule phases updates.
 *Note, _The "id" is the challenge id in above step.
 - Click the `Test` button and wait for the result. You can refer to the video attached for details.
 
+### Handle Registrants verification:
+Open Postman and load the collection and environment under challenge-autopilot/docs
+Check the tests under 'handle-registrants' folder in the collection.
+If the M2M token has expired, you can generate a new one using the test 'dev m2m token' under 'prepare' folder
+
+After running each of the tests, you can check the following:
+- The Resource table status
+- Check if the task is assigned or no by retrieving it using 'Get Task by Id' postman test
+- Check the cloudwatch logs in AWS of the 'challenge-autopilot-dev-handleChallengeResource' lambda function
+
+### Handle registrants demo videos:
+- https://monosnap.com/direct/bXyy4VirLD15hLhiKy4MWx60ftaaIn
+- https://monosnap.com/direct/ur42Msn9bxIyIBIARWXQUUD5c5B83x
 
 ### Locating an error
 

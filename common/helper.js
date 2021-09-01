@@ -264,11 +264,12 @@ const helper = {
    * Extract value from a DynamoDB stream event based on the provided key
    * @param {Object} data the event stream object
    * @param {String} key the property key
+   * @param {String} image The image from which to get the data: 'NewImage' or 'OldImage'
    */
-  async extractFromDynamoStreamEvent(data, key) {
+  async extractFromDynamoStreamEvent(data, key, image) {
     const dynamoEvents = _.filter(_.get(data, 'Records', []), r => r.eventSource === AppConstants.EventSources.DynamoDB)
     return _.map(dynamoEvents, record => {
-      const obj = _.get(record, `dynamodb.NewImage.${key}`)
+      const obj = _.get(record, `dynamodb.${image}.${key}`)
       return {
         eventName: record.eventName,
         [key]: obj[_.keys(obj)[0]]
@@ -394,6 +395,24 @@ const helper = {
       events.push(eventData)
     })
     return events
+  },
+
+  /**
+   * Send a patch request to the specified url with the given data and bearer token
+   *
+   * @param {String} url The url to which to send the patch request
+   * @param {Object} data The data to send
+   * @param {String} token The bearer token to use to authenticate the request
+   */
+  async patchRequest(url, data, token) {
+    const response = await axios.patch(url, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    return response.data
   }
 }
 
