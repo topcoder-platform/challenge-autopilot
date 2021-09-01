@@ -37,7 +37,7 @@ provider:
     SUBMISSION_REVIEW_TABLE_ARN: ${env:SUBMISSION_REVIEW_TABLE_ARN}
     SUBMISSIONS_TABLE_ARN: ${env:SUBMISSIONS_TABLE_ARN}
     SUBMISSION_REVIEW_SUMMATION_TABLE_ARN: ${env:SUBMISSION_REVIEW_SUMMATION_TABLE_ARN}
-
+    RESOURCE_TABLE_STREAM_ARN: ${env:RESOURCE_TABLE_STREAM_ARN}
 
 package:
   individually: true
@@ -67,3 +67,9 @@ functions:
       - stream:
         type: dynamodb
         arn: ${env:SUBMISSIONS_TABLE_ARN}
+  handleChallengeResource:
+    handler: handlers/events/handle-registrants.registrantsHandler
+    events:
+      - stream:
+          type: dynamodb
+          arn: ${env:RESOURCE_TABLE_STREAM_ARN}

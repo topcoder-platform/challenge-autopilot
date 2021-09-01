@@ -20,7 +20,7 @@ export const handlerChallenge = async (event, context) => {
   console.log('event:', JSON.stringify(event))
   let challengeDataFromEvent
   try {
-    const [_challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'id')
+    const [_challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'id', 'NewImage')
     challengeDataFromEvent = _challengeDataFromEvent
   } catch (e) {
     console.log('Could not extract required information')
@@ -73,7 +73,7 @@ export const handlerReview = async (event, context, challengeId) => {
   if (event) {
     console.log('event:', JSON.stringify(event))
     try {
-      const [data] = await helper.extractFromDynamoStreamEvent(event, 'submissionId')
+      const [data] = await helper.extractFromDynamoStreamEvent(event, 'submissionId', 'NewImage')
       reviewDataFromDynamo = data
     } catch (e) {
       console.log('Could not extract required information')
@@ -220,7 +220,7 @@ export const handlerSubmission = async (event, context) => {
   // we'll have to modify this to loop through records
   let challengeDataFromEvent
   try {
-    const [_challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'challengeId')
+    const [_challengeDataFromEvent] = await helper.extractFromDynamoStreamEvent(event, 'challengeId', 'NewImage')
     challengeDataFromEvent = _challengeDataFromEvent
   } catch (e) {
     console.log('Could not extract required information')

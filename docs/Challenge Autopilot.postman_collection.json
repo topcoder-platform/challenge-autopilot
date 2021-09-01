@@ -1,0 +1,966 @@
+{
+	"info": {
+		"_postman_id": "71a60133-1801-4996-962a-774be23768e5",
+		"name": "Challenge Autopilot",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "prepare",
+			"item": [
+				{
+					"name": "list challenges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.topcoder-dev.com/v5/challenges?status=Active",
+							"protocol": "https",
+							"host": [
+								"api",
+								"topcoder-dev",
+								"com"
+							],
+							"path": [
+								"v5",
+								"challenges"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "Active"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "dev m2m token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json()",
+									"pm.environment.set(\"M2M_TOKEN\", response.access_token)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"client_id\":\"jGIf2pd3f44B1jqvOai30BIKTZanYBfU\",\n    \"client_secret\":\"ldzqVaVEbqhwjM5KtZ79sG8djZpAVK8Z7qieVcC3vRjI4NirgcinKSBpPwk6mYYP\",\n    \"audience\":\"https://m2m.topcoder-dev.com/\",\n    \"grant_type\":\"client_credentials\"\n}"
+						},
+						"url": {
+							"raw": "https://topcoder-dev.auth0.com/oauth/token",
+							"protocol": "https",
+							"host": [
+								"topcoder-dev",
+								"auth0",
+								"com"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add phase change to schedule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{M2M_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"url\": \"https://api.topcoder-dev.com/v5/challenges/1305bb63-66bb-418c-b5e0-19cae242c5bf\",\r\n  \"method\": \"patch\",\r\n  \"payload\": \"{ \\\"phases\\\": [{\\n            \\\"phaseId\\\": \\\"a93544bc-c165-4af4-b55e-18f3593b457a\\\",\\n            \\\"isOpen\\\": false\\n          }]\\n        }\",\r\n  \"headers\": {\r\n  \t\"content-type\": \"application/json\"\r\n  },\r\n  \"scheduleTime\": \"2021-06-03T14:01:24Z\",\r\n  \"externalId\":\"1305bb63-66bb-418c-b5e0-19cae242c5bf\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.topcoder-dev.com/v5/schedules",
+							"protocol": "https",
+							"host": [
+								"api",
+								"topcoder-dev",
+								"com"
+							],
+							"path": [
+								"v5",
+								"schedules"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get the schedule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json()",
+									"console.log(JSON.parse(response[0].payload))"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{M2M_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://api.topcoder-dev.com/v5/schedules?externalId=1305bb63-66bb-418c-b5e0-19cae242c5bf",
+							"protocol": "https",
+							"host": [
+								"api",
+								"topcoder-dev",
+								"com"
+							],
+							"path": [
+								"v5",
+								"schedules"
+							],
+							"query": [
+								{
+									"key": "externalId",
+									"value": "1305bb63-66bb-418c-b5e0-19cae242c5bf"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "handle registrants",
+			"item": [
+				{
+					"name": "task",
+					"item": [
+						{
+							"name": "Create Task",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"if(pm.response.status === 'Created') {",
+											"    const response = pm.response.json();",
+											"    pm.environment.set('TASK_CHALLENGE_ID', response.id);",
+											"    pm.environment.set('TASK_REGISTRATION_PHASE_ID', response.phases.find(p => p.name == 'Registration').id)",
+											"    pm.environment.set('TASK_SUBMISSION_PHASE_ID', response.phases.find(p => p.name == 'Submission').id)",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"typeId\": \"ecd58c69-238f-43a4-a4bb-d172719b9f31\",\n    \"trackId\": \"9b6fc876-f4d9-4ccb-9dfd-419247628825\",\n    \"legacy\": {\n        \"reviewType\": \"INTERNAL\",\n        \"pureV5\": true\n    },\n    \"name\": \"Test Task 1\",\n    \"description\": \"Here's a large description with **markdown**\",\n    \"privateDescription\": \"private description\",\n    \"descriptionFormat\": \"markdown\",\n    \"timelineTemplateId\": \"53a307ce-b4b3-4d6f-b9a1-3741a58f77e6\",\n    \"prizeSets\": [\n        {\n            \"prizes\": [\n                {\n                    \"type\": \"USD\",\n                    \"value\": 1\n                }\n            ],\n            \"description\": \"Challenge Prizes\",\n            \"type\": \"placement\"\n        },\n        {\n            \"prizes\": [\n                {\n                    \"type\": \"USD\",\n                    \"value\": 1\n                }\n            ],\n            \"description\": \"Copilot Payment\",\n            \"type\": \"copilot\"\n        }\n    ],\n    \"tags\": [\n        \"Other\"\n    ],\n    \"projectId\": 17090,\n    \"startDate\": \"{{taskStartDate}}\",\n    \"status\": \"Draft\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{LOCAL_CHALLENGES_API_URL}}/challenges",
+									"host": [
+										"{{LOCAL_CHALLENGES_API_URL}}"
+									],
+									"path": [
+										"challenges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Task by Id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{M2M_TOKEN}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{LOCAL_CHALLENGES_API_URL}}/challenges/{{TASK_CHALLENGE_ID}}",
+									"host": [
+										"{{LOCAL_CHALLENGES_API_URL}}"
+									],
+									"path": [
+										"challenges",
+										"{{TASK_CHALLENGE_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Activate Task And Open Registration",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{M2M_TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"status\": \"Active\",\n    \"phases\": [\n        {\n            \"phaseId\": \"a93544bc-c165-4af4-b55e-18f3593b457a\",\n            \"duration\": 864000,\n            \"id\": \"{{TASK_REGISTRATION_PHASE_ID}}\",\n            \"name\": \"Registration\",\n            \"isOpen\": true,\n            \"scheduledStartDate\": \"2021-08-26T11:38:49.000Z\",\n            \"scheduledEndDate\": \"2021-09-05T11:38:49.000Z\",\n            \"actualStartDate\": \"2021-08-26T11:38:49.000Z\"\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{LOCAL_CHALLENGES_API_URL}}/challenges/{{TASK_CHALLENGE_ID}}",
+									"host": [
+										"{{LOCAL_CHALLENGES_API_URL}}"
+									],
+									"path": [
+										"challenges",
+										"{{TASK_CHALLENGE_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create submitter resource for task (thomaskranitsas)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"challengeId\": \"{{TASK_CHALLENGE_ID}}\",\n\t\"memberHandle\": \"thomaskranitsas\",\n\t\"roleId\": \"{{SUBMITTER_RESOURCE_ROLE_ID}}\"\n}"
+								},
+								"url": {
+									"raw": "{{LOCAL_RESOURCES_API_URL}}/resources",
+									"host": [
+										"{{LOCAL_RESOURCES_API_URL}}"
+									],
+									"path": [
+										"resources"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete submitter resource for task (thomaskranitsas)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"challengeId\": \"{{TASK_CHALLENGE_ID}}\",\n\t\"memberHandle\": \"thomaskranitsas\",\n\t\"roleId\": \"{{SUBMITTER_RESOURCE_ROLE_ID}}\"\n}"
+								},
+								"url": {
+									"raw": "{{LOCAL_RESOURCES_API_URL}}/resources",
+									"host": [
+										"{{LOCAL_RESOURCES_API_URL}}"
+									],
+									"path": [
+										"resources"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create reviewer resource for task",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"challengeId\": \"{{TASK_CHALLENGE_ID}}\",\n\t\"memberHandle\": \"ghostar\",\n\t\"roleId\": \"{{REVIEWER_RESOURCE_ROLE_ID}}\"\n}"
+								},
+								"url": {
+									"raw": "{{LOCAL_RESOURCES_API_URL}}/resources",
+									"host": [
+										"{{LOCAL_RESOURCES_API_URL}}"
+									],
+									"path": [
+										"resources"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Submission End Date",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{M2M_TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"phases\": [\n        {\n            \"phaseId\": \"6950164f-3c5e-4bdc-abc8-22aaf5a1bd49\",\n            \"duration\": 172800,\n            \"id\": \"{{TASK_SUBMISSION_PHASE_ID}}\",\n            \"name\": \"Submission\",\n            \"isOpen\": true,\n            \"scheduledStartDate\": \"2021-08-26T11:38:49.000Z\",\n            \"scheduledEndDate\": \"2021-08-28T11:38:49.000Z\",\n            \"actualEndDate\": \"2021-08-28T11:38:49.000Z\",\n            \"actualStartDate\": \"2021-08-26T11:38:49.000Z\"\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{LOCAL_CHALLENGES_API_URL}}/challenges/{{TASK_CHALLENGE_ID}}",
+									"host": [
+										"{{LOCAL_CHALLENGES_API_URL}}"
+									],
+									"path": [
+										"challenges",
+										"{{TASK_CHALLENGE_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create submitter resource for task (ghostar)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"challengeId\": \"{{TASK_CHALLENGE_ID}}\",\n\t\"memberHandle\": \"ghostar\",\n\t\"roleId\": \"{{SUBMITTER_RESOURCE_ROLE_ID}}\"\n}"
+								},
+								"url": {
+									"raw": "{{LOCAL_RESOURCES_API_URL}}/resources",
+									"host": [
+										"{{LOCAL_RESOURCES_API_URL}}"
+									],
+									"path": [
+										"resources"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete submitter resource for task (ghostar)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"challengeId\": \"{{TASK_CHALLENGE_ID}}\",\n\t\"memberHandle\": \"ghostar\",\n\t\"roleId\": \"{{SUBMITTER_RESOURCE_ROLE_ID}}\"\n}"
+								},
+								"url": {
+									"raw": "{{LOCAL_RESOURCES_API_URL}}/resources",
+									"host": [
+										"{{LOCAL_RESOURCES_API_URL}}"
+									],
+									"path": [
+										"resources"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "normal challenge - non task",
+					"item": [
+						{
+							"name": "Create Challenge",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"if(pm.response.status === 'Created') {",
+											"    const response = pm.response.json();",
+											"    pm.environment.set('CHALLENGE_UUID_DEVELOPMENT', response.id);",
+											"    pm.environment.set('CHALLENGE_REGISTRATION_PHASE_ID', response.phases.find(p => p.name = 'Registration').id)",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"typeId\": \"927abff4-7af9-4145-8ba1-577c16e64e2e\",\n    \"trackId\": \"9b6fc876-f4d9-4ccb-9dfd-419247628825\",\n    \"legacy\": {\n        \"reviewType\": \"COMMUNITY\"\n    },\n    \"name\": \"Postman Development Challenge Test 3\",\n    \"description\": \"Here's a large description with **markdown**\",\n    \"privateDescription\": \"private description\",\n    \"descriptionFormat\": \"markdown\",\n    \"timelineTemplateId\": \"7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c\",\n    \"prizeSets\": [\n        {\n            \"prizes\": [\n                {\n                    \"type\": \"USD\",\n                    \"value\": 1\n                }\n            ],\n            \"description\": \"Challenge Prizes\",\n            \"type\": \"placement\"\n        },\n        {\n            \"prizes\": [\n                {\n                    \"type\": \"USD\",\n                    \"value\": 1\n                }\n            ],\n            \"description\": \"Copilot Payment\",\n            \"type\": \"copilot\"\n        }\n    ],\n    \"tags\": [\n        \"Other\"\n    ],\n    \"projectId\": 17090,\n    \"startDate\": \"{{challengeStartDate}}\",\n    \"status\": \"Draft\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{URL}}/challenges",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"challenges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Challenge by Id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{M2M_TOKEN}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{LOCAL_CHALLENGES_API_URL}}/challenges/{{CHALLENGE_UUID_DEVELOPMENT}}",
+									"host": [
+										"{{LOCAL_CHALLENGES_API_URL}}"
+									],
+									"path": [
+										"challenges",
+										"{{CHALLENGE_UUID_DEVELOPMENT}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Activate Challenge",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{M2M_TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"status\": \"Active\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{LOCAL_CHALLENGES_API_URL}}/challenges/{{TASK_CHALLENGE_ID}}",
+									"host": [
+										"{{LOCAL_CHALLENGES_API_URL}}"
+									],
+									"path": [
+										"challenges",
+										"{{TASK_CHALLENGE_ID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create submitter resource for challenge",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"challengeId\": \"{{CHALLENGE_UUID_DEVELOPMENT}}\",\n\t\"memberHandle\": \"thomaskranitsas\",\n\t\"roleId\": \"{{SUBMITTER_RESOURCE_ROLE_ID}}\"\n}"
+								},
+								"url": {
+									"raw": "{{LOCAL_RESOURCES_API_URL}}/resources",
+									"host": [
+										"{{LOCAL_RESOURCES_API_URL}}"
+									],
+									"path": [
+										"resources"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete resource for task",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{M2M_TOKEN}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"challengeId\": \"{{CHALLENGE_UUID_DEVELOPMENT}}\",\n\t\"memberHandle\": \"thomaskranitsas\",\n\t\"roleId\": \"{{SUBMITTER_RESOURCE_ROLE_ID}}\"\n}"
+								},
+								"url": {
+									"raw": "{{LOCAL_RESOURCES_API_URL}}/resources",
+									"host": [
+										"{{LOCAL_RESOURCES_API_URL}}"
+									],
+									"path": [
+										"resources"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "endpoint",
+			"value": "https://REPLACEME.execute-api.us-east-1.amazonaws.com/dev"
+		}
+	]
+}

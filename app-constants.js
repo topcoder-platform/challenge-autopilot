@@ -66,7 +66,8 @@ export const EventSources = {
 
 export const EventNames = {
   INSERT: 'INSERT',
-  MODIFY: 'MODIFY'
+  MODIFY: 'MODIFY',
+  REMOVE: 'REMOVE'
 }
 
 export const ChallengeStatuses = {
@@ -78,3 +79,13 @@ export const PrizeTypes = {
   PLACEMENT: 'placement',
   CHECKPOINT: 'checkpoint',
 }
+
+// The submitter resource role id
+export const SUBMITTER_RESOURCE_ROLE_ID = '732339e7-8e30-49d7-9198-cccf9451e221'
+
+// The number of hours by which to extend the registration phase of a given task
+export const REGISTRATION_PHASE_EXTENSION_HOURS = 48
+
+// The number of hours by which to extend the submission phase of a given task
+// For consistency always make it greater than the REGISTRATION_PHASE_EXTENSION_HOURS
+export const SUBMISSION_PHASE_EXTENSION_HOURS = 72
