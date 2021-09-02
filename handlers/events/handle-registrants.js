@@ -74,17 +74,9 @@ export const registrantsHandler = async (event, context) => {
 
     switch(eventName) {
       case EventNames.INSERT: { // New registrant is added
-        // Close the registration phase
-        registrationPhase.isOpen = false
-        registrationPhase.actualEndDate = new Date().toISOString()
-
         // Assign the task to the member
         challengeTaskInformation.isAssigned = true
         challengeTaskInformation.memberId = memberDataFromEvent.memberId
-
-        // Add the updated registration phase to the phases to patch
-        phases.push(registrationPhase)
-
         break
       }
       case EventNames.REMOVE: { // A registrant is removed
@@ -126,7 +118,7 @@ export const registrantsHandler = async (event, context) => {
 
     // Patch the challenge with the updated task information and updated phases
     await helper.patchRequest(`${process.env.CHALLENGE_API_URL}/${challenge.id}`, {
-      phases,
+      ...(phases.length === 0 ? {} : { phases }),
       task: { ...challengeTaskInformation }
     }, token)
 
