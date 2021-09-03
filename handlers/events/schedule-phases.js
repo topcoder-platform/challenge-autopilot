@@ -115,7 +115,8 @@ export const handlerReview = async (event, context, challengeId) => {
         })
       }
     }
-  } else if (helper.isPhaseOpen(challenge, CheckpointReviewPhase)) {
+  }
+  if (helper.isPhaseOpen(challenge, CheckpointReviewPhase)) {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.CheckpointReview)
     if (reviewsDone) {
@@ -127,7 +128,8 @@ export const handlerReview = async (event, context, challengeId) => {
         })
       }
     }
-  } else if (helper.isPhaseOpen(challenge, ScreeningPhase)) {
+  }
+  if (helper.isPhaseOpen(challenge, ScreeningPhase)) {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Screening)
     if (reviewsDone) {
@@ -145,7 +147,8 @@ export const handlerReview = async (event, context, challengeId) => {
         })
       }
     }
-  } else if (helper.isPhaseOpen(challenge, ReviewPhase)) {
+  }
+  if (helper.isPhaseOpen(challenge, ReviewPhase)) {
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(submissions, ReviewType.Review)
     if (reviewsDone) {
@@ -163,13 +166,16 @@ export const handlerReview = async (event, context, challengeId) => {
         })
       }
     }
-  } else if (helper.isPhaseOpen(challenge, ApprovalPhase)) {
+  }
+  if (helper.isPhaseOpen(challenge, ApprovalPhase)) {
     const finalFix = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.FINAL_FIX)
     const reviewsDone = await helper.checkIfAllSubmissionsReviewed(finalFix, ReviewType.Approval)
     const submissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CONSTEST_SUBMISSION)
     const checkpointSubmissions = await helper.getChallengeSubmissions(challenge.id, SubmissionTypes.CHECKPOINT_SUBMISSION)
+    console.log(`reviews done: ${reviewsDone}`)
     if (reviewsDone) {
       // Close challenge
+      console.log('closing the challenge...')
       const winners = await helper.getChallengeWinners(submissions, checkpointSubmissions)
       let oldEvents = await helper.getEventsFromScheduleApi(challenge.id)
       oldEvents = _.map(oldEvents, item => ({ externalId: item.externalId, scheduleTime: item.scheduleTime, payload: JSON.parse(item.payload) }))
