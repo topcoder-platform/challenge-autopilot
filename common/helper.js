@@ -121,6 +121,8 @@ const helper = {
    */
   async checkIfAllSubmissionsReviewed(submissions, reviewType) {
     if (submissions.length === 0) return false
+    const withReviews = _.filter(submissions, s => _.findIndex(_.get(s, 'review', []), r => r.typeId === reviewType) > -1)
+    if (withReviews.length !== submissions.length) return false // not all submissions are reviewed
     return _.filter(submissions, s => _.findIndex(_.get(s, 'review', []), r => r.typeId === reviewType && r.status !== 'completed') > -1).length === 0
   },
   /**
