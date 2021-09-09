@@ -28,7 +28,7 @@ export const handlerChallenge = async (event, context) => {
   }
   const challenge = await helper.getChallenge(challengeDataFromEvent.id)
 
-  if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
+  if (challenge.status !== ChallengeStatuses.ACTIVE || !helper.isV5(challenge)) {
     console.info(`The challenge ${challengeDataFromEvent.id} is not Active or it's not pure V5. Skipping...`)
     return
   }
@@ -92,6 +92,10 @@ export const handlerReview = async (event, context, challengeId) => {
     challenge = await helper.getChallenge(challengeId)
   } else {
     console.info('Nothing to do here...')
+    return
+  }
+  if (challenge.status !== ChallengeStatuses.ACTIVE || !helper.isV5(challenge)) {
+    console.info(`The challenge ${challengeDataFromEvent.id} is not Active or it's not pure V5. Skipping...`)
     return
   }
   const apEvents = []
@@ -234,7 +238,7 @@ export const handlerSubmission = async (event, context) => {
   }
   const challenge = await helper.getChallenge(challengeDataFromEvent.challengeId)
 
-  if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
+  if (challenge.status !== ChallengeStatuses.ACTIVE || !helper.isV5(challenge)) {
     console.info(`The challenge ${challengeDataFromEvent.challengeId} is not Active or it's not pure V5. Skipping...`)
     return
   }

@@ -8,6 +8,9 @@ const topcoderM2MConfig = _.pick(process.env, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'T
 const topcoderM2M = m2mAuth({ ...topcoderM2MConfig, AUTH0_AUDIENCE: topcoderM2MConfig.AUTH0_AUDIENCE })
 
 const helper = {
+  isV5(challenge) {
+    return _.get(challenge, 'legacy.pureV5') || _.get(challenge, 'legacy.pureV5Task')
+  },
   /**
    * Get a challenge phase
    * @param {Object} challenge the challenge object
