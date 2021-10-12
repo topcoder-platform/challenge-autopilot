@@ -1,75 +1,101 @@
-# Topcoder EventBridge PoC
+# Topcoder Challenge Autopilot
 
 <img src="./docs/images/diagram.png" width="500px" />
 
-Proof of concept application that processes challenge file submissions using AWS EventBridge.
+Proof of concept application that processes schedule phases updates.
+
+## Configuration
+- AUTH0_URL: AUTH0 URL, used to get M2M token
+- AUTH0_PROXY_SERVER_URL: AUTH0 proxy server URL, used to get M2M token
+- AUTH0_AUDIENCE: AUTH0 audience, used to get M2M token
+- TOKEN_CACHE_TIME: AUTH0 token cache time, used to get M2M token
+- AUTH0_CLIENT_ID: AUTH0 client id, used to get M2M token
+- AUTH0_CLIENT_SECRET: AUTH0 client secret, used to get M2M token
+- CHALLENGES_TABLE: the name of the challenges table
+- SUBMISSION_REVIEWS_TABLE: the name of the review table
+- SUBMISSIONS_TABLE: the name of the submission table
+- CREATE_CLOUDTRAIL: should be set to `true` unless CloudTrail is already set up in the account 
+- SCHEDULE_API_URL: the url of the schedule api
+- CHALLENGE_API_URL: the url of the challenge api
+- SUBMISSIONS_API_URL: the url of the submissions api
+- RESOURCE_TABLE_STREAM_ARN: The ARN of the DynamoDB stream of the Resource table (See how to enable stream on Resource table and get its ARN: https://monosnap.com/direct/5ihHDWNa2cvrkPjaacxnUBJlLqxt0j)
+   The DynamoDB stream of the Resource table should use 'New and old Images' view type
+*Note, _All these are set via the environment variables.
 
 ## Install and deploy
+- Make sure to use Node v12+ by command `node -v`. We recommend using [NVM](https://github.com/nvm-sh/nvm) to quickly switch to the right version:
 
-- Requires [Node/NPM](https://nodejs.org/en/download/) and [Serverless Framework CLI](https://www.serverless.com/framework/docs/getting-started/) to be installed. Credentials for your AWS account will also need to be [configured](https://www.serverless.com/framework/docs/providers/aws/guide/credentials/).
-- Set necessary environment variables (see table below):
-  - _S3 bucket names need to be globally unique._
-  - _`CREATE_CLOUDTRAIL` should be set to `true` unless CloudTrail is already set up in the account._
+   ```bash
+   nvm use
+   ```
+- Requires [Serverless Framework CLI](https://www.serverless.com/framework/docs/getting-started/) to be installed. Credentials for your AWS account will also need to be [configured](https://www.serverless.com/framework/docs/providers/aws/guide/credentials/).
+- In the `challenge-autopilot` root directory create `.env` file with the next environment variables. Values for **Auth0 config** should be shared with you on the forum.<br>
+   ```bash
+   # Auth0 config
+   AUTH0_URL=
+   AUTH0_PROXY_SERVER_URL=
+   AUTH0_AUDIENCE=
+   TOKEN_CACHE_TIME=
+   AUTH0_CLIENT_ID=
+   AUTH0_CLIENT_SECRET=
+  
+   # Depending services
+   CHALLENGES_TABLE=
+   SUBMISSION_REVIEWS_TABLE=
+   SUBMISSIONS_TABLE=
+   CREATE_CLOUDTRAIL=
+   RESOURCE_TABLE_STREAM_ARN=
+
+   # Depending services
+   SCHEDULE_API_URL=https://api.topcoder-dev.com/v5/schedules
+   CHALLENGE_API_URL=https://api.topcoder-dev.com/v5/challenges
+   SUBMISSIONS_API_URL=https://api.topcoder-dev.com/v5/submissions
+   ```
+
+  - ⚠️ Never commit this file or its copy to the repository!
 - Install dependencies:
   - `npm install`
 - Deploy to AWS:
   - `serverless deploy`
-- Take note of the API Gateway endpoint shown once deployed (e.g `https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev`).
-- Open Postman collection and update `endpoint` variable to the API Gateway endpoint.
 
-## Testing the application
+## Verification
 
-### Create Challenge Flow
-- Create a challenge - either:
-  - Run the "New Challenge" request in Postman, or
-  - `curl https://<REPLACEME>.execute-api.us-east-1.amazonaws.com/dev/eventbridge-poc-challenges -H 'Content-Type: application/json' --data '{"name": "Test Challenge"}'`
+### Preparing a challenge for the schedule phase function
+- In development environment, find a challenge whose status is `Active` and `pureV5Task` is true. Or you can create one by the challenge API.
+- Create a scheduled phase for this challenge.
+*Note, _A postman collection is provided for above tasks.
 
-### Submission Flow
-- Take note of the ID of the challenge, and create a zip file to upload with the filename format: `<challenge_id>-<name>-<pass/fail>.zip`:
-  - e.g. `touch xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-test-pass.zip`
-- Upload the file to the DMZ bucket:
-  - e.g. `aws s3 cp xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-test-pass.zip s3://topcoder-eventbridge-poc-submissions-dmz`
-- Verify the submission has been created:
-  - e.g. `aws dynamodb scan --table-name=submissions --region=us-east-1`
-  - _It might take a minute for the submission to appear._
-- Verify the submitted file has been moved to the appropriate bucket:
-  - e.g. `aws s3 ls s3://topcoder-eventbridge-poc-submissions` or `aws s3 ls s3://topcoder-eventbridge-poc-submissions-quarantine`
-  - _The file should be in the submissions bucket if the anti-virus scan passed, or in the quarantine bucket if it failed._
-- Verify the anti-virus result is correct:
-  - Re-run `aws dynamodb scan --table-name=submissions --region=us-east-1` until the `avScanPass` attribute is `true` or `false`.
-  - _The result should match the final part of the filename - `-pass.zip` = `true` / `-fail.zip` = `false`._
-- Verify the `numberOfSubmissions` attribute on the challenge has been incremented:
-  - e.g. `aws dynamodb scan --table-name=challenges --region=us-east-1`
+### Verifying the event call from the aws console
+- Open the aws lambda console: https://console.aws.amazon.com/lambda/home?region=us-east-1
+- Select the function that is deployed. Then select `Test` tab. And paste below content:
+```json
+{
+  "detail": {
+    "newImage": {
+      "id": "1305bb63-66bb-418c-b5e0-19cae242c5bf"
+    }
+  },
+  "detail-type": "MODIFY"
+}
+```
+*Note, _The "id" is the challenge id in above step.
+- Click the `Test` button and wait for the result. You can refer to the video attached for details.
 
-### Review Flow
-- Create a review for a submission - either:
-  - Run the "New Review" request in Postman, or
-  - ```
-    curl https://<REPLACEME>.execute-api.us-east-1.amazonaws.com/dev/eventbridge-poc-submissions/<REPLACEME>/reviews \
-    -H 'Content-Type: application/json' \
-    --data '{"score": 85.5, "reviewerHandle": "Reviewer", "reviewerId": "6b53e767-e480-4c1e-b839-18074fb751fd"}'
-    ```
-- Repeat the above until each submission in a challenge has at least two reviews.
-- Verify the challenge status has changed to `completed` - either:
-  - Run the "List Challenges - Completed" request in Postman, or
-  - `curl https://REPLACEME.execute-api.us-east-1.amazonaws.com/dev/eventbridge-poc-challenges\?status\=completed`
+### Handle Registrants verification:
+Open Postman and load the collection and environment under challenge-autopilot/docs
+Check the tests under 'handle-registrants' folder in the collection.
+If the M2M token has expired, you can generate a new one using the test 'dev m2m token' under 'prepare' folder
 
+After running each of the tests, you can check the following:
+- The Resource table status
+- Check if the task is assigned or no by retrieving it using 'Get Task by Id' postman test
+- Check the cloudwatch logs in AWS of the 'challenge-autopilot-dev-handleChallengeResource' lambda function
 
-## Using ServiceLens
-- The application is instrumented with AWS X-Ray, which allows each API Gateway request and Lambda function invocation to be traced.
-- This can be viewed through the Service Map or Traces in the ServiceLens section of CloudWatch.
-- The Service Map gives a visual overview of the whole application and how its different parts interact, allowing for errors to be quickly located.
-- Traces shows every invocation and can be filtered on various criteria. It can be helpful to narrow down the timeframe and status to find the trace you want.
-- In addition, API Gateway responses contain an `X-Amzn-Trace-Id` header which you can use to search for the trace for that request.
-- It may take a few minutes after a request or invocation for the logs to be available.
+### Handle registrants demo videos:
+- https://monosnap.com/direct/bXyy4VirLD15hLhiKy4MWx60ftaaIn
+- https://monosnap.com/direct/ur42Msn9bxIyIBIARWXQUUD5c5B83x
 
 ### Locating an error
-#### API Gateway
-- If you are receiving an error response from API Gateway, you may be able to find out more detail in the trace.
-- Copy the `X-Amzn-Trace-Id` header (omitting `Root=`) in the response and paste it into the search box in the Traces section.
-- You should then be able to see the entire trace for this request. Clicking on the subsections gives extra information about them, and may reveal the error.
-- Alternatively, at the bottom of the page are the logs for all the services involved in the request. Expanding these is likely to help locate an error message.
-- Common errors may be found in the `Request parameter validation failed` and `Method response...` logs.
 
 #### EventBridge triggered Lambda
 - A Lambda function that is producing errors will appear with a red or orange ring in the Service Map. You can click on it and click `View Traces` to see what the issue is.
@@ -85,22 +111,6 @@ Proof of concept application that processes challenge file submissions using AWS
 - This should give some insight into the operations being performed by the function and where the issue might be.
 
 ### Common issues
-#### Submission file not processed
-- Check the filename is in the correct format and the challenge ID is valid.
-- An invalid challenge ID will produce a `ValidationError` which can be seen in the trace for the `processSubmission` invocation.
-
-#### File moved to incorrect bucket
-- Check the `<pass/fail>` section of the filename - anything other than `pass` will cause the file to be moved to the quarantine bucket.
-- The `avScan` Lambda logs the `destinationBucket` for the file, and it can also be seen in the Trace Map at the top of the trace page.
-
-#### Submissions count not incremented
-- Check the AV scan result - only submissions that pass will cause the submissions count to be incremented.
-- In addition, only unique filenames will be counted as a new submission and increment the count.
-
-#### Challenge/Review not created
-- Ensure you have provided a valid submission ID within the URL.
-- Check the request body is in the correct format. You may receive an `Invalid request body` error message.
-- More detail on the specific error can be found within the trace logs by searching for the `X-Amzn-Trace-Id`.
 
 ## Remove deployment
 
@@ -110,29 +120,14 @@ Proof of concept application that processes challenge file submissions using AWS
 
 ## Environment variables
 
-| Variable name                 | Description                                                                         |
-|-------------------------------|-------------------------------------------------------------------------------------|
-| SUBMISSIONS_BUCKET            | The name of the S3 bucket to store submission files that pass the AV scan.          |
-| SUBMISSIONS_DMZ_BUCKET        | The name of the S3 bucket to store submission files that have not been scanned yet. |
-| SUBMISSIONS_QUARANTINE_BUCKET | The name of the S3 bucket to store submission files that fail the AV scan.          |
-| CLOUDTRAIL_LOGS_BUCKET        | The name of the S3 bucket to store CloudTrail logs.                                 |
-| CHALLENGES_TABLE              | The name of the DynamoDB table to hold challenges.                                  |
-| SUBMISSIONS_TABLE             | The name of the DynamoDB table to hold submissions.                                 |
-| SUBMISSION_REVIEWS_TABLE      | The name of the DynamoDB table to hold submission reviews.                          |
-| CREATE_CLOUDTRAIL             | Boolean - whether or not to create the CloudTrail resources.                        |
+See the Configuration section.
 
 ## Project structure
 
-- `/docs` - Documentation/Postman files
+- `/docs` - Postman files
 - `/handlers`
-  - `/api`
-    - `*.js` - Lambda function handlers for API Gateway routes
   - `/events`
     - `*.js` - Lambda function handlers for EventBridge events
-- `/models`
-    - `*.js` - Dynamoose models
-- `/schema`
-  - `*.json` - API Gateway validation models
 - `serverless.yml` - Main Serverless Framework configuration file
 
 ## Notes

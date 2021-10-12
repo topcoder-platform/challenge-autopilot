@@ -44,7 +44,7 @@ build_steps: &build_steps
           command: |
              ./awsconfiguration.sh $DEPLOY_ENV
              source awsenvconf
-             ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar,${LOGICAL_ENV}-${APPNAME}-deployvar
+             ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-global-appvar,${LOGICAL_ENV}-${APPNAME}-buildvar,${LOGICAL_ENV}-${APPNAME}-deployvar
              source buildenvvar
              ./master_deploy.sh -d LAMBDA -e $DEPLOY_ENV 
              #-s ${LOGICAL_ENV}-${APPNAME}-appvar
@@ -55,7 +55,7 @@ jobs:
     environment:
       DEPLOY_ENV: "DEV"
       LOGICAL_ENV: "dev"
-      APPNAME: "tc-eventbridge"  
+      APPNAME: "tc-challenge-autopilot"  
       # deploy app
     steps: *build_steps
 
@@ -65,7 +65,7 @@ jobs:
     environment:
       DEPLOY_ENV: "PROD"
       LOGICAL_ENV: "prod"
-      APPNAME: "tc-eventbridge"  
+      APPNAME: "tc-challenge-autopilot"  
       # deploy app
     steps: *build_steps
 
