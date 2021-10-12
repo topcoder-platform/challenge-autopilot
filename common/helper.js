@@ -9,7 +9,8 @@ const topcoderM2M = m2mAuth({ ...topcoderM2MConfig, AUTH0_AUDIENCE: topcoderM2MC
 
 const helper = {
   isV5(challenge) {
-    return _.get(challenge, 'legacy.pureV5') || _.get(challenge, 'legacy.pureV5Task')
+    return _.get(challenge, 'legacy.pureV5Task') // partial support in production
+    // return _.get(challenge, 'legacy.pureV5') || _.get(challenge, 'legacy.pureV5Task')
   },
   /**
    * Get a challenge phase
