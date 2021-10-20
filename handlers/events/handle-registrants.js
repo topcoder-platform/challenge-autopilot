@@ -52,7 +52,7 @@ export const registrantsHandler = async (event, context) => {
   // Get the challenge information from the Challenge API
   const challenge = await helper.getChallenge(challengeDataFromEvent.challengeId)
 
-  if (challenge.status !== ChallengeStatuses.ACTIVE || !_.get(challenge, 'legacy.pureV5')) {
+  if (challenge.status !== ChallengeStatuses.ACTIVE || !helper.isV5(challenge)) {
     console.info(`The challenge ${challengeDataFromEvent.challengeId} is not Active or it's not pure V5. Skipping...`)
     return
   }
