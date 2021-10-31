@@ -18,7 +18,7 @@
     "webpack": "^4.43.0"
   },
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.22.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
     "tc-core-library-js": "github:appirio-tech/tc-core-library-js#dev"
